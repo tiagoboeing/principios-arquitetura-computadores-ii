@@ -16,9 +16,9 @@ LDFLAGS=/CODEVIEW
 ## Processing Tools
 ASM=ml.exe
 LD=link16.exe
-#  C:/Users/tiago/Desktop/basico/8086/Debug/Debug.exe: TOOL=LD
-#     C:/Users/tiago/Desktop/basico/8086/Debug/basico.obj: TOOL=ASM
-#        C:/Users/tiago/Desktop/basico/8086/basico.asm
+#  G:/Meu Drive/Tiago Boeing/FURB/2019-1/Princípios de Arquitetura de Computadores II/principios-arquitetura-computadores-ii/project-proteus/8086/Debug/Debug.exe: TOOL=LD
+#     G:/Meu Drive/Tiago Boeing/FURB/2019-1/Princípios de Arquitetura de Computadores II/principios-arquitetura-computadores-ii/project-proteus/8086/Debug/basico.obj: TOOL=ASM
+#        G:/Meu Drive/Tiago Boeing/FURB/2019-1/Princípios de Arquitetura de Computadores II/principios-arquitetura-computadores-ii/project-proteus/8086/basico.asm
 
 # Build tree:
 all:	Debug

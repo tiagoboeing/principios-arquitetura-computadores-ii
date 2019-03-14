@@ -1,0 +1,2 @@
+- OE (Output Enable) --> pega o dado que está memorizado/congelado e joga para fora
+- LE (Latch Enable) --> memoriza

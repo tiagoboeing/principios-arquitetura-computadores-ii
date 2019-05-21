@@ -4,6 +4,7 @@ Based relative: utiliza registradores BX, BP
 Indexed relative: utiliza registradores SI, DI
 IF: interrupt flag (deve estar aceso para atender interrupções)
 
+Forçar interrupção: `int 8`
 
 # Controladora 8259
 

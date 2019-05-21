@@ -1,3 +1,9 @@
+### 21/05/2019
+
+Based relative: utiliza registradores BX, BP
+Indexed relative: utiliza registradores SI, DI
+
+
 # Controladora 8259
 
 ### 14/05/2019 

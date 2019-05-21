@@ -2,6 +2,7 @@
 
 Based relative: utiliza registradores BX, BP
 Indexed relative: utiliza registradores SI, DI
+IF: interrupt flag (deve estar aceso para atender interrupções)
 
 
 # Controladora 8259
@@ -26,3 +27,7 @@ CLI (no começo da interrupção) e STI (no fim da interrupção).
 - 62H = IRQ2...
 
 Ao receber o IRQ o processador multiplicará por 4 em HEX.
+
+-----
+
+> Proteus versão 8.3

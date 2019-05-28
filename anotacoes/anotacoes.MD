@@ -1,3 +1,7 @@
+### 28/05/2019
+
+TXT1 28 DUP " " - repete caracter 28 vezes
+
 ### 21/05/2019
 
 Based relative: utiliza registradores BX, BP

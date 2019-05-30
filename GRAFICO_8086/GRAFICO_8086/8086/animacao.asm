@@ -682,9 +682,9 @@ DEMO:
 	
 ;sprite 24x24 bits
 ;AH = LINHA, COLUNA = AL
-        LEA SI, BOOK
-	MOV AH,10 ;COLUNA
-	MOV AL,3  ;LINHA
+        LEA SI, FLECHA
+	MOV AH,0 ;COLUNA
+	MOV AL,0  ;LINHA
         CALL PRINT_ICON
 	
 ;sprite 24x24 bits

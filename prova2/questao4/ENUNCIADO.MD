@@ -1,0 +1,1 @@
+3) no display gráfico, desenhe uma linha horizontal no centro do display, de ponta a ponta

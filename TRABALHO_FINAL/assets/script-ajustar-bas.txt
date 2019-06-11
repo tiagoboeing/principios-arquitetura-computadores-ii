@@ -1,0 +1,8 @@
+No Notepad++
+- Ir em Pesquisar (CTRL + F), aba Replace (Substituir)
+
+
+Limpando primeira linha (deixar vazio)
+	find what: '/+
+	replace with: 
+	

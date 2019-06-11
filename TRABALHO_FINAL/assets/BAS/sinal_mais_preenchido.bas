@@ -1,4 +1,3 @@
-'///////////////////////////////////////////////////////////////////////////////
-sinal_mais_preenchido = 16, 2,	' Image Table Name, Xbytes, N of Lines, 34 bytes
-&hFF,&hFF,&hFF,&h7F,&h7F,&h7F,&h7F,&h07,&h07,&h7F,&h7F,&h7F,&h7F,&hFF,&hFF,&hFF,
-&hFF,&hFF,&hFF,&hFE,&hFE,&hFE,&hFE,&hE0,&hE0,&hFE,&hFE,&hFE,&hFE,&hFF,&hFF,&hFF
+SINAL_MAIS_PREENCHIDO 	DB 2, 2
+DB						0hFFH,0hFFH,0hFFH,0h7FH,0h7FH,0h7FH,0h7FH,0h07H,0h07H,0h7FH,0h7FH,0h7FH,0h7FH,0hFFH,0hFFH,0hFFH
+DB						0hFFH,0hFFH,0hFFH,0hFEH,0hFEH,0hFEH,0hFEH,0hE0H,0hE0H,0hFEH,0hFEH,0hFEH,0hFEH,0hFFH,0hFFH,0hFFH

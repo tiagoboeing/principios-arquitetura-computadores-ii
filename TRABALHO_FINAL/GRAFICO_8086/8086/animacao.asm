@@ -2,832 +2,1086 @@
 
 ; I/O Address Bus decode - every device gets 0x200 addresses */
 
-;8255
-IO4  EQU  0800h
+; 8255
+IO4             EQU 0800h
 
-ADR_PPI_PORTA	EQU  (IO4)
-ADR_PPI_PORTB	EQU  (IO4 + 02h)
-ADR_PPI_PORTC	EQU  (IO4 + 04h)
-ADR_PPI_CONTROL	EQU  (IO4 + 06h)
+ADR_PPI_PORTA   EQU (IO4)
+ADR_PPI_PORTB   EQU (IO4 + 02h)
+ADR_PPI_PORTC   EQU (IO4 + 04h)
+ADR_PPI_CONTROL	EQU (IO4 + 06h)
 
-PPI_PORTA_INP	EQU  10h
-PPI_PORTA_OUT	EQU  00h
-PPI_PORTB_INP	EQU  02h
-PPI_PORTB_OUT	EQU  00h
-PPI_PORTCL_INP	EQU  01h
-PPI_PORTCL_OUT	EQU  00h
-PPI_PORTCH_INP	EQU  08h
-PPI_PORTCH_OUT	EQU  00h
-PPI_MODE_BCL_0	EQU  00h
-PPI_MODE_BCL_1	EQU  04h
-PPI_MODE_ACH_0	EQU  00h
-PPI_MODE_ACH_1	EQU  20h
-PPI_MODE_ACH_2	EQU  40h
-PPI_ACTIVE	EQU  80h 
+PPI_PORTA_INP   EQU 10h
+PPI_PORTA_OUT   EQU 00h
+PPI_PORTB_INP   EQU 02h
+PPI_PORTB_OUT   EQU 00h
+PPI_PORTCL_INP  EQU 01h
+PPI_PORTCL_OUT  EQU 00h
+PPI_PORTCH_INP  EQU 08h
+PPI_PORTCH_OUT  EQU 00h
+PPI_MODE_BCL_0  EQU 00h
+PPI_MODE_BCL_1  EQU 04h
+PPI_MODE_ACH_0  EQU 00h
+PPI_MODE_ACH_1  EQU 20h
+PPI_MODE_ACH_2  EQU 40h
+PPI_ACTIVE      EQU 80h
 
 .8086
 .code
 
 ORG 0008H
-PONTEIRO_TRATADOR_INTERRUPCAO DB 4 DUP("J") ; NMI
+PONTEIRO_TRATADOR_INTERRUPCAO DB 4 DUP("J")       ; NMI
 
 ORG 0400H
 
-;LIGA DISPLAY
+; LIGA DISPLAY
 GLCD_ON:
-   CALL GLCD_CS1_LOW
-   CALL GLCD_CS2_LOW
-   CALL GLCD_RS_LOW
-   CALL GLCD_RW_LOW
-   MOV AL,03FH
-   CALL MANDA_PORT_B
-   CALL ENABLE_PULSE
-   RET   
+          CALL     GLCD_CS1_LOW
+          CALL     GLCD_CS2_LOW
+          CALL     GLCD_RS_LOW
+          CALL     GLCD_RW_LOW
+          MOV      AL,03FH
+          CALL     MANDA_PORT_B
+          CALL     ENABLE_PULSE
+          RET
 
-;------------------------------------
-;POSICIONA "CURSOR" NA COLUNA
+          ; ------------------------------------
+          ; POSICIONA "CURSOR" NA COLUNA
 GLCD_GOTO_COL:
-   PUSHF
-   PUSH AX
+          PUSHF
+          PUSH     AX
 
-   CALL GLCD_RS_LOW
-   CALL GLCD_RW_LOW
-   CMP AH,64
-   JL LEFT
-   
-   CALL GLCD_CS2_LOW
-   CALL GLCD_CS1_HIGH
-   SUB AH,64
-   MOV COL_DATA,AH
-   JMP SAI_GOTO_COL
-   
+          CALL     GLCD_RS_LOW
+          CALL     GLCD_RW_LOW
+          CMP      AH,64
+          JL       LEFT
+
+          CALL     GLCD_CS2_LOW
+          CALL     GLCD_CS1_HIGH
+          SUB      AH,64
+          MOV      COL_DATA,AH
+          JMP      SAI_GOTO_COL
+
 LEFT:
-    CALL GLCD_CS1_LOW
-    CALL GLCD_CS2_HIGH
-    MOV COL_DATA,AH
+          CALL     GLCD_CS1_LOW
+          CALL     GLCD_CS2_HIGH
+          MOV      COL_DATA,AH
 
 SAI_GOTO_COL:
-   OR COL_DATA, 40H
-   AND COL_DATA, 7FH
-   MOV AL,COL_DATA
-   CALL MANDA_PORT_B
-   CALL ENABLE_PULSE
-   POP AX
-   POPF
-   RET
-;------------------------------------
+          OR       COL_DATA, 40H
+          AND      COL_DATA, 7FH
+          MOV      AL,COL_DATA
+          CALL     MANDA_PORT_B
+          CALL     ENABLE_PULSE
+          POP      AX
+          POPF
+          RET
+          ; ------------------------------------
 
-;------------------------------------
-;POSICIONA "CURSOR" NA COLUNA
+          ; ------------------------------------
+          ; POSICIONA "CURSOR" NA COLUNA
 GLCD_GOTO_COL_TEXT:
-   PUSHF
-   PUSH AX
-   PUSH BX
+          PUSHF
+          PUSH     AX
+          PUSH     BX
 
-   PUSH AX
-   MOV BL,8
-   MOV AL,AH
-   MUL BL
-   MOV BL,AL
-   POP AX
-   MOV AH,BL
-  
-   CALL GLCD_RS_LOW
-   CALL GLCD_RW_LOW
-   CMP AH,64
-   JL LEFT_TEXT
-   
-   CALL GLCD_CS2_LOW
-   CALL GLCD_CS1_HIGH
-   SUB AH,64
-   MOV COL_DATA,AH
-   JMP SAI_GOTO_COL_TEXT
-   
+          PUSH     AX
+          MOV      BL,8
+          MOV      AL,AH
+          MUL      BL
+          MOV      BL,AL
+          POP      AX
+          MOV      AH,BL
+
+          CALL     GLCD_RS_LOW
+          CALL     GLCD_RW_LOW
+          CMP      AH,64
+          JL       LEFT_TEXT
+
+          CALL     GLCD_CS2_LOW
+          CALL     GLCD_CS1_HIGH
+          SUB      AH,64
+          MOV      COL_DATA,AH
+          JMP      SAI_GOTO_COL_TEXT
+
 LEFT_TEXT:
-    CALL GLCD_CS1_LOW
-    CALL GLCD_CS2_HIGH
-    MOV COL_DATA,AH
+          CALL     GLCD_CS1_LOW
+          CALL     GLCD_CS2_HIGH
+          MOV      COL_DATA,AH
 
 SAI_GOTO_COL_TEXT:
-   OR COL_DATA, 40H
-   AND COL_DATA, 7FH
-   MOV AL,COL_DATA
-   CALL MANDA_PORT_B
-   CALL ENABLE_PULSE
-   POP BX
-   POP AX
-   POPF
-   RET
-;------------------------------------
-   
-;------------------------------------
-;POSICIONA "CURSOR" NA LINHA
+          OR       COL_DATA, 40H
+          AND      COL_DATA, 7FH
+          MOV      AL,COL_DATA
+          CALL     MANDA_PORT_B
+          CALL     ENABLE_PULSE
+          POP      BX
+          POP      AX
+          POPF
+          RET
+          ; ------------------------------------
+
+          ; ------------------------------------
+          ; POSICIONA "CURSOR" NA LINHA
 GLCD_GOTO_ROW:
-   PUSH AX
-   CALL GLCD_RS_LOW
-   CALL GLCD_RW_LOW
-   OR AL,0B8H
-   AND AL,0BFH
-   MOV COL_DATA,AL
-   CALL MANDA_PORT_B
-   CALL ENABLE_PULSE
-   POP AX
-   RET
-;------------------------------------
+          PUSH     AX
+          CALL     GLCD_RS_LOW
+          CALL     GLCD_RW_LOW
+          OR       AL,0B8H
+          AND      AL,0BFH
+          MOV      COL_DATA,AL
+          CALL     MANDA_PORT_B
+          CALL     ENABLE_PULSE
+          POP      AX
+          RET
+          ; ------------------------------------
 
-;------------------------------------
-;POSICIONA "CURSOR" NA LINHA
+          ; ------------------------------------
+          ; POSICIONA "CURSOR" NA LINHA
 GLCD_GOTO_ROW_TEXT:
-   PUSH AX
-   CALL GLCD_RS_LOW
-   CALL GLCD_RW_LOW
-   OR AL,0B8H
-   AND AL,0BFH
-   MOV COL_DATA,AL
-   CALL MANDA_PORT_B
-   CALL ENABLE_PULSE
-   POP AX
-   RET
-;------------------------------------
+          PUSH     AX
+          CALL     GLCD_RS_LOW
+          CALL     GLCD_RW_LOW
+          OR       AL,0B8H
+          AND      AL,0BFH
+          MOV      COL_DATA,AL
+          CALL     MANDA_PORT_B
+          CALL     ENABLE_PULSE
+          POP      AX
+          RET
+          ; ------------------------------------
 
 
-;------------------------------------   
-; AH LINHA E  AL COLUNA
-; POSICIONAMENTO DO "CURSOR" EM LINHA X COLUNA
-; MODO GRAFICO (128x64)
+          ; ------------------------------------
+          ; AH LINHA E  AL COLUNA
+          ; POSICIONAMENTO DO "CURSOR" EM LINHA X COLUNA
+          ; MODO GRAFICO (128x64)
 GLCD_GOTO_XY:
-   CALL GLCD_GOTO_COL
-   CALL GLCD_GOTO_ROW
-   RET
-;;------------------------------------   
+          CALL     GLCD_GOTO_COL
+          CALL     GLCD_GOTO_ROW
+          RET
+          ; ;------------------------------------
 
-;------------------------------------   
-; AH LINHA E  AL COLUNA
-; POSICIONAMENTO DO "CURSOR" EM LINHA X COLUNA
-; COLUNAS 16 (0..15), LINHAS 8 (0..7)
+          ; ------------------------------------
+          ; AH LINHA E  AL COLUNA
+          ; POSICIONAMENTO DO "CURSOR" EM LINHA X COLUNA
+          ; COLUNAS 16 (0..15), LINHAS 8 (0..7)
 GLCD_GOTO_XY_TEXT:
-   CALL GLCD_GOTO_COL_TEXT
-   CALL GLCD_GOTO_ROW_TEXT
-   RET
-;------------------------------------   
+          CALL     GLCD_GOTO_COL_TEXT
+          CALL     GLCD_GOTO_ROW_TEXT
+          RET
+          ; ------------------------------------
 
-; AL = DATA
+          ; AL = DATA
 GLCD_WRITE:
-   CALL GLCD_RS_HIGH
-   CALL GLCD_RW_LOW
-   CALL MANDA_PORT_B
-   CALL ENABLE_PULSE
-   RET
-   
-;AL = DATA  
-GLCD_CLRLN:   
-   PUSHF
-   PUSH AX
-   PUSH CX
-   MOV AH,0
-   CALL GLCD_GOTO_XY
-   MOV AH,64
-   CALL GLCD_GOTO_XY
-   CALL GLCD_CS1_LOW
-   MOV AL,0
-   MOV CX,64
-ESCREVA:   
-   CALL GLCD_WRITE
-   LOOP ESCREVA
-   POP CX
-   POP AX
-   POPF
-   RET
+          CALL     GLCD_RS_HIGH
+          CALL     GLCD_RW_LOW
+          CALL     MANDA_PORT_B
+          CALL     ENABLE_PULSE
+          RET
 
-;---------------------------------------------------------
-;APAGA DISPLAY GRAFICO
+          ; AL = DATA
+GLCD_CLRLN:
+          PUSHF
+          PUSH     AX
+          PUSH     CX
+          MOV      AH,0
+          CALL     GLCD_GOTO_XY
+          MOV      AH,64
+          CALL     GLCD_GOTO_XY
+          CALL     GLCD_CS1_LOW
+          MOV      AL,0
+          MOV      CX,64
+ESCREVA:
+          CALL     GLCD_WRITE
+          LOOP     ESCREVA
+          POP      CX
+          POP      AX
+          POPF
+          RET
+
+          ; ---------------------------------------------------------
+          ; APAGA DISPLAY GRAFICO
 GLCD_CLR:
-   PUSHF
-   PUSH AX
-   MOV AL,0
-CLRLN:   
-   CALL GLCD_CLRLN
-   ADD AL,1
-   CMP AL,8
-   JNE CLRLN
-   POP AX
-   POPF
-   RET
-;---------------------------------------------------------
+          PUSHF
+          PUSH     AX
+          MOV      AL,0
+CLRLN:
+          CALL     GLCD_CLRLN
+          ADD      AL,1
+          CMP      AL,8
+          JNE      CLRLN
+          POP      AX
+          POPF
+          RET
+          ; ---------------------------------------------------------
 
-;---------------------------------------------------------
-;DESENHA UM PONTO NESTAS COORDENADAS
-;AH, AL, BH
-;COLUNAS MODO GRAFICO = 128 (0..127) AH
-;LINHAS MODO GRAFICO = 64 (0..63) AL
-;BH = 0 PIXEL APAGADO, BH=1 PIXEL ACESO
+          ; ---------------------------------------------------------
+          ; DESENHA UM PONTO NESTAS COORDENADAS
+          ; AH, AL, BH
+          ; COLUNAS MODO GRAFICO = 128 (0..127) AH
+          ; LINHAS MODO GRAFICO = 64 (0..63) AL
+          ; BH = 0 PIXEL APAGADO, BH=1 PIXEL ACESO
 GLCD_DRAW_POINT:
-    PUSHF
-    PUSH AX
-    PUSH BX
-    PUSH CX
+          PUSHF
+          PUSH     AX
+          PUSH     BX
+          PUSH     CX
 
-    PUSH AX ; SALVA AH, AL
-    PUSH AX ; SALVA AH, AL
-    
-    MOV CH,AH ; SALVA AH
-    MOV AH,0
+          PUSH     AX                                                                                ; SALVA AH, AL
+          PUSH     AX                                                                                ; SALVA AH, AL
 
-    MOV BL,8
-    DIV BL
-    
-    MOV AH,CH
-    CALL GLCD_GOTO_XY
-    
-    POP AX  ; RESTAURA AH, AL
-    
-    CMP BH,0
-    JE LIGHT_SPOT
-    
-    MOV AH,0
-    MOV BH,8
-    DIV BH
-    ; AH RESTO
-    MOV CL,AH
-    MOV AL,1
-    SHL AL,CL
-    MOV COL_DATA_AUX,AL
-    
-    MOV AH,CH
-    CALL GLCD_READ_DATA
-    OR COL_DATA_AUX,AL
+          MOV      CH,AH                                                                             ; SALVA AH
+          MOV      AH,0
 
-    JMP SAI_GLCD_DRAW_POINT
-    
+          MOV      BL,8
+          DIV      BL
+
+          MOV      AH,CH
+          CALL     GLCD_GOTO_XY
+
+          POP      AX                                                                                ; RESTAURA AH, AL
+
+          CMP      BH,0
+          JE       LIGHT_SPOT
+
+          MOV      AH,0
+          MOV      BH,8
+          DIV      BH
+          ; AH RESTO
+          MOV      CL,AH
+          MOV      AL,1
+          SHL      AL,CL
+          MOV      COL_DATA_AUX,AL
+
+          MOV      AH,CH
+          CALL     GLCD_READ_DATA
+          OR       COL_DATA_AUX,AL
+
+          JMP      SAI_GLCD_DRAW_POINT
+
 LIGHT_SPOT:
-    MOV AH,0
-    MOV BH,8
-    DIV BH
-    ; AH RESTO
-    MOV CL,AH
-    MOV AL,1
-    SHL AL,CL
-    NOT AL
-    MOV COL_DATA_AUX,AL
+          MOV      AH,0
+          MOV      BH,8
+          DIV      BH
+          ; AH RESTO
+          MOV      CL,AH
+          MOV      AL,1
+          SHL      AL,CL
+          NOT      AL
+          MOV      COL_DATA_AUX,AL
 
-    MOV AH,CH
-    CALL GLCD_READ_DATA
-    AND COL_DATA_AUX,AL
+          MOV      AH,CH
+          CALL     GLCD_READ_DATA
+          AND      COL_DATA_AUX,AL
 
 SAI_GLCD_DRAW_POINT:
-    POP AX
+          POP      AX
 
-    MOV CH,AH ; SALVA AH
-    MOV AH,0
+          MOV      CH,AH                                                                             ; SALVA AH
+          MOV      AH,0
 
-    MOV BL,8
-    DIV BL
-    
-    MOV AH,CH
-    CALL GLCD_GOTO_XY
-   
-    MOV AL, COL_DATA_AUX
-    CALL GLCD_WRITE
-   
-    POP CX
-    POP BX
-    POP AX
-    POPF
-    RET 
-;---------------------------------------------------------
+          MOV      BL,8
+          DIV      BL
 
-;---------------------------------------------------------
-;LE STATUS DO DISPLAY
+          MOV      AH,CH
+          CALL     GLCD_GOTO_XY
+
+          MOV      AL, COL_DATA_AUX
+          CALL     GLCD_WRITE
+
+          POP      CX
+          POP      BX
+          POP      AX
+          POPF
+          RET
+          ; ---------------------------------------------------------
+
+          ; ---------------------------------------------------------
+          ; LE STATUS DO DISPLAY
 GLCD_READ_DATA:
-    CALL INICIALIZA_8255_PORT_INPUT
-    CALL GLCD_RW_HIGH
-    CALL GLCD_RS_HIGH
-    CMP AH,63
-    JG  HAB_CS2
+          CALL     INICIALIZA_8255_PORT_INPUT
+          CALL     GLCD_RW_HIGH
+          CALL     GLCD_RS_HIGH
+          CMP      AH,63
+          JG       HAB_CS2
 
 HAB_CS1:
-    CALL GLCD_CS2_HIGH
-    CALL GLCD_CS1_LOW
-    JMP HAB
+          CALL     GLCD_CS2_HIGH
+          CALL     GLCD_CS1_LOW
+          JMP      HAB
 
 HAB_CS2:
-    CALL GLCD_CS2_LOW
-    CALL GLCD_CS1_HIGH
+          CALL     GLCD_CS2_LOW
+          CALL     GLCD_CS1_HIGH
 
 HAB:
-     CALL GLCD_EN_HIGH
-     CALL GLCD_EN_LOW
-     CALL GLCD_EN_HIGH
-     CALL LE_PORT_B
-     MOV READ_DATA,AL
-     CALL GLCD_EN_LOW
-     CALL INICIALIZA_8255_PORTB_OUTPUT
-     RET
-;---------------------------------------------------------
+          CALL     GLCD_EN_HIGH
+          CALL     GLCD_EN_LOW
+          CALL     GLCD_EN_HIGH
+          CALL     LE_PORT_B
+          MOV      READ_DATA,AL
+          CALL     GLCD_EN_LOW
+          CALL     INICIALIZA_8255_PORTB_OUTPUT
+          RET
+          ; ---------------------------------------------------------
 
-;---------------------------------------------------------
-; AL = INDICE CARACTER FONT (COMECA EM 0)
-; IMPRIME CARACTER NA LINHA E COLUNA DEFINIDA
+          ; ---------------------------------------------------------
+          ; AL = INDICE CARACTER FONT (COMECA EM 0)
+          ; IMPRIME CARACTER NA LINHA E COLUNA DEFINIDA
 PRINT_CAR:
-	PUSHF
-	PUSH AX
-	PUSH BX
-	PUSH CX
-	MOV BL,5
-	MUL BL
-	MOV BX,AX
-	MOV CX,5
+          PUSHF
+          PUSH     AX
+          PUSH     BX
+          PUSH     CX
+          MOV      BL,5
+          MUL      BL
+          MOV      BX,AX
+          MOV      CX,5
 
 PRINTING_CAR:
-	MOV AL,FONTS[BX]
-        CALL GLCD_WRITE
-        INC BX
-	LOOP PRINTING_CAR
-	POP CX
-	POP BX
-	POP AX
-	POPF
-	RET
-	
-;---------------------------------------------------------
-; AH = COLUNA, AL=LINHA
-; PRIMEIRO BYTE DO VETOR … NUMERO DE LINHAS E COLUNAS OCUPADAS
-; EXEMPLO, IMAGEM DE 24X24 PIXELS = 3 LINHAS X 3 COLUNAS
+          MOV      AL,FONTS[BX]
+          CALL     GLCD_WRITE
+          INC      BX
+          LOOP     PRINTING_CAR
+          POP      CX
+          POP      BX
+          POP      AX
+          POPF
+          RET
+
+          ; ---------------------------------------------------------
+          ; AH = COLUNA, AL=LINHA
+          ; PRIMEIRO BYTE DO VETOR ÔøΩ NUMERO DE LINHAS E COLUNAS OCUPADAS
+          ; EXEMPLO, IMAGEM DE 24X24 PIXELS = 3 LINHAS X 3 COLUNAS
 PRINT_ICON:
-	PUSHF
-	PUSH AX
-	PUSH CX
-	MOV CL,  DS:[SI]  
-	MOV QNT_COLUNAS, CL ; QNT COLUNAS IMPRESSAS
-	MOV SALVA_QNT_COLUNAS, CL ; GUARDA QNT PARA NOVO LACO QNT COLUNAS IMPRESSAS
-	MOV POS_COLUNAS, AH ; COLUNA PASSADA COMO PARAMETRO
-	MOV CL,  DS:[SI+1]
-	MOV LINHA, CL ;LINHA
-	ADD SI,2    ; APONTA PARA ICONE...
+          PUSHF
+          PUSH     AX
+          PUSH     CX
+MOV CL,   DS       :[SI]
+          MOV      QNT_COLUNAS, CL                                                                   ; QNT COLUNAS IMPRESSAS
+          MOV      SALVA_QNT_COLUNAS, CL                                                             ; GUARDA QNT PARA NOVO LACO QNT COLUNAS IMPRESSAS
+          MOV      POS_COLUNAS, AH                                                                   ; COLUNA PASSADA COMO PARAMETRO
+MOV CL,   DS       :[SI+1]
+          MOV      LINHA, CL                                                                         ; LINHA
+          ADD      SI,2                                                                              ; APONTA PARA ICONE...
 
 PRINT:
-	MOV CX,8
-	CALL GLCD_GOTO_XY_TEXT	
+          MOV      CX,8
+          CALL     GLCD_GOTO_XY_TEXT
 PRINTING_ICON:
-        PUSH AX
-	MOV AL,DS:[SI]
-        CALL GLCD_WRITE
-	POP  AX
-        INC SI
-	LOOP PRINTING_ICON
-	INC AH
-	DEC QNT_COLUNAS
-	JNE PRINT	
-	MOV AH,SALVA_QNT_COLUNAS
-	MOV QNT_COLUNAS,AH
-	MOV AH,POS_COLUNAS
-	INC AL
-	DEC LINHA
-	JNE PRINT	
-	POP CX
-	POP AX
-	POPF
-	RET
+          PUSH     AX
+MOV AL,   DS       :[SI]
+          CALL     GLCD_WRITE
+          POP      AX
+          INC      SI
+          LOOP     PRINTING_ICON
+          INC      AH
+          DEC      QNT_COLUNAS
+          JNE      PRINT
+          MOV      AH,SALVA_QNT_COLUNAS
+          MOV      QNT_COLUNAS,AH
+          MOV      AH,POS_COLUNAS
+          INC      AL
+          DEC      LINHA
+          JNE      PRINT
+          POP      CX
+          POP      AX
+          POPF
+          RET
 
-;---------------------------------------------------------
-;ESTA ROTINA IMPRIME O GRAFICO APONTADO POR SI
+          ; ---------------------------------------------------------
+          ; ESTA ROTINA IMPRIME O GRAFICO APONTADO POR SI
 PLOT_BMP:
-	PUSHF
-	PUSH AX
-	PUSH SI
-	MOV AL,0
-	MOV AH,0
+          PUSHF
+          PUSH     AX
+          PUSH     SI
+          MOV      AL,0
+          MOV      AH,0
 PLOT:
-	CALL GLCD_GOTO_XY
-	PUSH AX
-	MOV AL,[SI]
-	CALL GLCD_WRITE
-	POP AX
-	INC SI
-	INC AH
-	CMP AH,127
-	JNE PLOT
-	MOV AH,0
-	INC AL
-	CMP AL,8
-	JNE PLOT
-	POP SI
-	POP AX
-	POPF 
-	RET
-;---------------------------------------------------------
+          CALL     GLCD_GOTO_XY
+          PUSH     AX
+          MOV      AL,[SI]
+          CALL     GLCD_WRITE
+          POP      AX
+          INC      SI
+          INC      AH
+          CMP      AH,127
+          JNE      PLOT
+          MOV      AH,0
+          INC      AL
+          CMP      AL,8
+          JNE      PLOT
+          POP      SI
+          POP      AX
+          POPF
+          RET
+          ; ---------------------------------------------------------
 
-;---------------------------------------------------------
-;ATIVA O GLCD
+          ; ---------------------------------------------------------
+          ; ATIVA O GLCD
 GLCD_ATIVA:
-	CALL GLCD_CS1_HIGH
-	CALL GLCD_CS2_HIGH
-	CALL GLCD_RST_HIGH
-	CALL GLCD_ON
-	RET
-;---------------------------------------------------------
+          CALL     GLCD_CS1_HIGH
+          CALL     GLCD_CS2_HIGH
+          CALL     GLCD_RST_HIGH
+          CALL     GLCD_ON
+          RET
+          ; ---------------------------------------------------------
 
-;---------------------------------------------------------
-;ESTAS ROTINAS APENAS GERAM PULSOS PARA O DISPLAY GRAFICO
+          ; ---------------------------------------------------------
+          ; ESTAS ROTINAS APENAS GERAM PULSOS PARA O DISPLAY GRAFICO
 GLCD_CS1_HIGH:
-   PUSHF
-   PUSH AX
-   OR  GLCD_CONTROL, 32
-   MOV AL,GLCD_CONTROL
-   CALL MANDA_PORT_A
-   POP AX
-   POPF
-   RET
+          PUSHF
+          PUSH     AX
+          OR       GLCD_CONTROL, 32
+          MOV      AL,GLCD_CONTROL
+          CALL     MANDA_PORT_A
+          POP      AX
+          POPF
+          RET
 
 GLCD_CS1_LOW:
-   PUSHF
-   PUSH AX
-   MOV AL, 32
-   NOT AL
-   AND  GLCD_CONTROL, AL
-   MOV AL,GLCD_CONTROL
-   CALL MANDA_PORT_A
-   POP AX
-   POPF
-   RET
+          PUSHF
+          PUSH     AX
+          MOV      AL, 32
+          NOT      AL
+          AND      GLCD_CONTROL, AL
+          MOV      AL,GLCD_CONTROL
+          CALL     MANDA_PORT_A
+          POP      AX
+          POPF
+          RET
 
 GLCD_CS2_HIGH:
-   PUSHF
-   PUSH AX
-   OR  GLCD_CONTROL, 16
-   MOV AL,GLCD_CONTROL
-   CALL MANDA_PORT_A
-   POP AX
-   POPF
-   RET
+          PUSHF
+          PUSH     AX
+          OR       GLCD_CONTROL, 16
+          MOV      AL,GLCD_CONTROL
+          CALL     MANDA_PORT_A
+          POP      AX
+          POPF
+          RET
 
 GLCD_CS2_LOW:
-   PUSHF
-   PUSH AX
-   MOV AL, 16
-   NOT AL
-   AND  GLCD_CONTROL, AL
-   MOV AL,GLCD_CONTROL
-   CALL MANDA_PORT_A
-   POP AX
-   POPF
-   RET
+          PUSHF
+          PUSH     AX
+          MOV      AL, 16
+          NOT      AL
+          AND      GLCD_CONTROL, AL
+          MOV      AL,GLCD_CONTROL
+          CALL     MANDA_PORT_A
+          POP      AX
+          POPF
+          RET
 
 GLCD_RST_HIGH:
-   PUSHF
-   PUSH AX
-   OR  GLCD_CONTROL, 1
-   MOV AL,GLCD_CONTROL
-   CALL MANDA_PORT_A
-   POP AX
-   POPF
-   RET
+          PUSHF
+          PUSH     AX
+          OR       GLCD_CONTROL, 1
+          MOV      AL,GLCD_CONTROL
+          CALL     MANDA_PORT_A
+          POP      AX
+          POPF
+          RET
 
 GLCD_RST_LOW:
-   PUSHF
-   PUSH AX
-   MOV AL, 1
-   NOT AL
-   AND  GLCD_CONTROL, AL
-   MOV AL,GLCD_CONTROL
-   CALL MANDA_PORT_A
-   POP AX
-   POPF
-   RET
+          PUSHF
+          PUSH     AX
+          MOV      AL, 1
+          NOT      AL
+          AND      GLCD_CONTROL, AL
+          MOV      AL,GLCD_CONTROL
+          CALL     MANDA_PORT_A
+          POP      AX
+          POPF
+          RET
 
 GLCD_EN_HIGH:
-   PUSHF
-   PUSH AX
-   OR  GLCD_CONTROL, 2
-   MOV AL,GLCD_CONTROL
-   CALL MANDA_PORT_A
-   POP AX
-   POPF
-   RET
+          PUSHF
+          PUSH     AX
+          OR       GLCD_CONTROL, 2
+          MOV      AL,GLCD_CONTROL
+          CALL     MANDA_PORT_A
+          POP      AX
+          POPF
+          RET
 
 GLCD_EN_LOW:
-   PUSHF
-   PUSH AX
-   MOV AL, 2
-   NOT AL
-   AND  GLCD_CONTROL, AL
-   MOV AL,GLCD_CONTROL
-   CALL MANDA_PORT_A
-   POP AX
-   POPF
-   RET
+          PUSHF
+          PUSH     AX
+          MOV      AL, 2
+          NOT      AL
+          AND      GLCD_CONTROL, AL
+          MOV      AL,GLCD_CONTROL
+          CALL     MANDA_PORT_A
+          POP      AX
+          POPF
+          RET
 
 GLCD_RW_HIGH:
-   PUSHF
-   PUSH AX
-   OR  GLCD_CONTROL, 4
-   MOV AL,GLCD_CONTROL
-   CALL MANDA_PORT_A
-   POP AX
-   POPF
-   RET
-   
+          PUSHF
+          PUSH     AX
+          OR       GLCD_CONTROL, 4
+          MOV      AL,GLCD_CONTROL
+          CALL     MANDA_PORT_A
+          POP      AX
+          POPF
+          RET
+
 GLCD_RW_LOW:
-   PUSHF
-   PUSH AX
-   MOV AL, 4
-   NOT AL
-   AND  GLCD_CONTROL, AL
-   MOV AL,GLCD_CONTROL
-   CALL MANDA_PORT_A
-   POP AX
-   POPF
-   RET
+          PUSHF
+          PUSH     AX
+          MOV      AL, 4
+          NOT      AL
+          AND      GLCD_CONTROL, AL
+          MOV      AL,GLCD_CONTROL
+          CALL     MANDA_PORT_A
+          POP      AX
+          POPF
+          RET
 
 GLCD_RS_HIGH:
-   PUSHF
-   PUSH AX
-   OR  GLCD_CONTROL, 8
-   MOV AL,GLCD_CONTROL
-   CALL MANDA_PORT_A
-   POP AX
-   POPF
-   RET
+          PUSHF
+          PUSH     AX
+          OR       GLCD_CONTROL, 8
+          MOV      AL,GLCD_CONTROL
+          CALL     MANDA_PORT_A
+          POP      AX
+          POPF
+          RET
 
 GLCD_RS_LOW:
-   PUSHF
-   PUSH AX
-   MOV AL, 8
-   NOT AL
-   AND  GLCD_CONTROL, AL
-   MOV AL,GLCD_CONTROL
-   CALL MANDA_PORT_A
-   POP AX
-   POPF
-   RET
-   
+          PUSHF
+          PUSH     AX
+          MOV      AL, 8
+          NOT      AL
+          AND      GLCD_CONTROL, AL
+          MOV      AL,GLCD_CONTROL
+          CALL     MANDA_PORT_A
+          POP      AX
+          POPF
+          RET
+
 ENABLE_PULSE:
-   CALL GLCD_EN_HIGH
-   CALL GLCD_EN_LOW
-   RET
-   
-;---------------------------------------------------------
-;ROTINAS PARA 8255   
+          CALL     GLCD_EN_HIGH
+          CALL     GLCD_EN_LOW
+          RET
+
+          ; ---------------------------------------------------------
+          ; ROTINAS PARA 8255
 INICIALIZA_8255_PORTB_OUTPUT:
-   PUSHF
-   PUSH AX
-   PUSH DX
-   MOV DX, ADR_PPI_CONTROL
-   MOV AL,0
-   OR AL,PPI_PORTA_OUT
-   OR AL,PPI_PORTB_OUT  
-   OR AL,PPI_PORTCL_INP
-   OR AL,PPI_PORTCH_INP
-   OR AL,PPI_MODE_BCL_0
-   OR AL,PPI_MODE_ACH_0
-   OR AL,PPI_ACTIVE
-   OUT DX,AL
-   POP DX
-   POP AX
-   POPF
-   RET
+          PUSHF
+          PUSH     AX
+          PUSH     DX
+          MOV      DX, ADR_PPI_CONTROL
+          MOV      AL,0
+          OR       AL,PPI_PORTA_OUT
+          OR       AL,PPI_PORTB_OUT
+          OR       AL,PPI_PORTCL_INP
+          OR       AL,PPI_PORTCH_INP
+          OR       AL,PPI_MODE_BCL_0
+          OR       AL,PPI_MODE_ACH_0
+          OR       AL,PPI_ACTIVE
+          OUT      DX,AL
+          POP      DX
+          POP      AX
+          POPF
+          RET
 
 INICIALIZA_8255_PORT_INPUT:
-   PUSHF
-   PUSH AX
-   PUSH DX
-   MOV DX, ADR_PPI_CONTROL
-   MOV AL,0
-   OR AL,PPI_PORTA_OUT
-   OR AL,PPI_PORTB_INP
-   OR AL,PPI_PORTCL_INP
-   OR AL,PPI_PORTCH_INP
-   OR AL,PPI_MODE_BCL_0
-   OR AL,PPI_MODE_ACH_0
-   OR AL,PPI_ACTIVE
-   OUT DX,AL
-   POP DX
-   POP AX
-   POPF
-   RET
+          PUSHF
+          PUSH     AX
+          PUSH     DX
+          MOV      DX, ADR_PPI_CONTROL
+          MOV      AL,0
+          OR       AL,PPI_PORTA_OUT
+          OR       AL,PPI_PORTB_INP
+          OR       AL,PPI_PORTCL_INP
+          OR       AL,PPI_PORTCH_INP
+          OR       AL,PPI_MODE_BCL_0
+          OR       AL,PPI_MODE_ACH_0
+          OR       AL,PPI_ACTIVE
+          OUT      DX,AL
+          POP      DX
+          POP      AX
+          POPF
+          RET
 
 MANDA_PORT_A:
-    PUSHF
-    PUSH DX
-    MOV DX,ADR_PPI_PORTA
-    OUT DX,AL
-    POP DX
-    POPF
-    RET
+          PUSHF
+          PUSH     DX
+          MOV      DX,ADR_PPI_PORTA
+          OUT      DX,AL
+          POP      DX
+          POPF
+          RET
 
 MANDA_PORT_B:
-    PUSHF
-    PUSH DX
-    MOV DX,ADR_PPI_PORTB
-    OUT DX,AL
-    POP DX
-    POPF
-    RET
+          PUSHF
+          PUSH     DX
+          MOV      DX,ADR_PPI_PORTB
+          OUT      DX,AL
+          POP      DX
+          POPF
+          RET
 
 LE_PORT_B:
-    PUSHF
-    PUSH DX
-    MOV DX,ADR_PPI_PORTB
-    IN AL,DX
-    POP DX
-    POPF
-    RET
+          PUSHF
+          PUSH     DX
+          MOV      DX,ADR_PPI_PORTB
+          IN       AL,DX
+          POP      DX
+          POPF
+          RET
 
 LE_PORT_C:
-    PUSHF
-    PUSH DX
-    MOV DX,ADR_PPI_PORTC
-    IN AL,DX
-    POP DX
-    POPF
-    RET
-;---------------------------------------------------------
-     
+          PUSHF
+          PUSH     DX
+          MOV      DX,ADR_PPI_PORTC
+          IN       AL,DX
+          POP      DX
+          POPF
+          RET
+          ; ---------------------------------------------------------
+
 .startup
 
-	MOV AX,@DATA
-	MOV DS,AX
-	MOV AX,@STACK
-	MOV SS,AX
+MOV AX,@DATA
+MOV     DS       ,AX
+        MOV      AX,@STACK
+        MOV      SS,AX
 
-	CALL INICIALIZA_8255_PORTB_OUTPUT
+        CALL     INICIALIZA_8255_PORTB_OUTPUT
 
-	CALL GLCD_ATIVA
-;---------------------------------------------------------
+        CALL     GLCD_ATIVA
+        ; ---------------------------------------------------------
 
-
+        ; INICIO DO JOGO
 GAME:
-	CALL GLCD_CLR
-	CALL PERSONAGEM
+        CALL  GLCD_CLR
+        ;CALL  PERSONAGEM
+        
+        ; OPERA√á√ïES
+        CALL TEXT_OPERACOES
+        MOV   CX, 8     ; CONGELA 8 SEGUNDOS
+        CALL  DELAY_SEG
 
-	MOV CX, 5 ; 5 SEGUNDOS
-	CALL DELAY_SEG
-	CALL SINAIS_PREENCHIDOS
+        ; N√çVEL 1
+        CALL GLCD_CLR   ; LIMPA DISPLAY
+        CALL TEXT_NIVEL1
+        MOV   CX, 7     ; CONGELA 7 SEGUNDOS
+        CALL  DELAY_SEG
 
-	MOV CX, 3 ; 2 SEGUNDOS
-	CALL DELAY_SEG
-	CALL MOSTRA_CARROS 
+        CALL  SINAIS
+        CALL  BORDA_SUPERIOR
+        CALL  ANIMACAO_CARRO
+        MOV   CX, 5     ; CONGELA 6 SEGUNDOS
+        CALL  DELAY_SEG
 
-	JMP $
-   
+
+        JMP      $
+        ; ROTINA PARA DELAY DAS ANIMA√á√ïES
+
 DELAY_SEG:
-   MOV DX, 65000D
+          MOV      DX, 65000D
 
 DECDX:
-   SUB DX, 1
+          SUB      DX, 1
 
-   CMP DX, 0
-   JNE DECDX
+          CMP      DX, 0
+          JNE      DECDX
 
-   LOOP DELAY_SEG
-   RET
+          LOOP     DELAY_SEG
+          RET
 
-SINAIS_PREENCHIDOS:
-	CALL GLCD_CLR
-	CALL DESENHA_MAIS
-	CALL DESENHA_MENOS
-	RET
+          ; --------------------------------
 
+SINAIS:
+          CALL     GLCD_CLR
+          CALL     DESENHA_MAIS
+          CALL     DESENHA_MENOS
+          RET
+
+BORDA_SUPERIOR:
+        MOV      AH,1                                                                              ; COLUNA
+        MOV      AL,0                                                                              ; LINHA
+        CALL     GLCD_GOTO_XY_TEXT
+        MOV      BH,0
+        LEA      SI, OSSO
+        CALL     PRINT_ICON
+
+        MOV      AH,4                                                                              ; COLUNA
+        MOV      AL,0                                                                              ; LINHA
+        CALL     GLCD_GOTO_XY_TEXT
+        MOV      BH,0
+        LEA      SI, OSSO
+        CALL     PRINT_ICON
+
+        MOV      AH,7                                                                              ; COLUNA
+        MOV      AL,0                                                                              ; LINHA
+        CALL     GLCD_GOTO_XY_TEXT
+        MOV      BH,0
+        LEA      SI, OSSO
+        CALL     PRINT_ICON
+
+        MOV      AH,10                                                                              ; COLUNA
+        MOV      AL,0                                                                              ; LINHA
+        CALL     GLCD_GOTO_XY_TEXT
+        MOV      BH,0
+        LEA      SI, OSSO
+        CALL     PRINT_ICON
+
+        MOV      AH,13                                                                              ; COLUNA
+        MOV      AL,0                                                                              ; LINHA
+        CALL     GLCD_GOTO_XY_TEXT
+        MOV      BH,0
+        LEA      SI, OSSO
+        CALL     PRINT_ICON
+        RET  
+
+BORDA_INFERIOR:
+        MOV      AH,1                                                                              ; COLUNA
+        MOV      AL,8                                                                              ; LINHA
+        CALL     GLCD_GOTO_XY_TEXT
+        MOV      BH,0
+        LEA      SI, OSSO
+        CALL     PRINT_ICON
+
+        MOV      AH,4                                                                              ; COLUNA
+        MOV      AL,8                                                                              ; LINHA
+        CALL     GLCD_GOTO_XY_TEXT
+        MOV      BH,0
+        LEA      SI, OSSO
+        CALL     PRINT_ICON
+
+        MOV      AH,7                                                                              ; COLUNA
+        MOV      AL,8                                                                              ; LINHA
+        CALL     GLCD_GOTO_XY_TEXT
+        MOV      BH,0
+        LEA      SI, OSSO
+        CALL     PRINT_ICON
+
+        MOV      AH,10                                                                              ; COLUNA
+        MOV      AL,8                                                                              ; LINHA
+        CALL     GLCD_GOTO_XY_TEXT
+        MOV      BH,0
+        LEA      SI, OSSO
+        CALL     PRINT_ICON
+
+        MOV      AH,13                                                                              ; COLUNA
+        MOV      AL,8                                                                              ; LINHA
+        CALL     GLCD_GOTO_XY_TEXT
+        MOV      BH,0
+        LEA      SI, OSSO
+        CALL     PRINT_ICON
+        RET  
 PERSONAGEM:
-    LEA SI, VERT
-	MOV AH,0 ;COLUNA
-	MOV AL,0  ;LINHA
-    CALL PRINT_ICON
-	RET
+          LEA      SI, VERT
+          MOV      AH,0                                                                              ; COLUNA
+          MOV      AL,0                                                                              ; LINHA
+          CALL     PRINT_ICON
+          RET
 
 DESENHA_MAIS:
-	MOV AH,5 ; COLUNA
-	MOV AL,2 ; LINHA
-	CALL GLCD_GOTO_XY_TEXT
-	MOV BH,0
-    LEA SI, SINAL_MAIS
-    CALL PRINT_ICON
-	RET
+          MOV      AH,5                                                                              ; COLUNA
+          MOV      AL,2                                                                              ; LINHA
+          CALL     GLCD_GOTO_XY_TEXT
+          MOV      BH,0
+          LEA      SI, SINAL_MAIS
+          CALL     PRINT_ICON
+          RET
 
 DESENHA_MENOS:
-	MOV AH,9 ; COLUNA
-	MOV AL,2 ; LINHA
-	CALL GLCD_GOTO_XY_TEXT
-	MOV BH,0
-    LEA SI, SINAL_MENOS
-    CALL PRINT_ICON
-	RET
+          MOV      AH,9                                                                              ; COLUNA
+          MOV      AL,2                                                                              ; LINHA
+          CALL     GLCD_GOTO_XY_TEXT
+          MOV      BH,0
+          LEA      SI, SINAL_MENOS
+          CALL     PRINT_ICON
+          RET
 
 DESENHA_MAIS_PREENCHIDO:
-	MOV AH,5 ; COLUNA
-	MOV AL,2 ; LINHA
-	CALL GLCD_GOTO_XY_TEXT
-	MOV BH,0
-    LEA SI, SINAL_MAIS_PREENCHIDO
-    CALL PRINT_ICON
-	RET
+          MOV      AH,5                                                                              ; COLUNA
+          MOV      AL,2                                                                              ; LINHA
+          CALL     GLCD_GOTO_XY_TEXT
+          MOV      BH,0
+          LEA      SI, SINAL_MAIS_PREENCHIDO
+          CALL     PRINT_ICON
+          RET
 
 DESENHA_MENOS_PREENCHIDO:
-	MOV AH,9 ; COLUNA
-	MOV AL,2 ; LINHA
-	CALL GLCD_GOTO_XY_TEXT
-	MOV BH,0
-    LEA SI, SINAL_MENOS_PREENCHIDO
-    CALL PRINT_ICON
-	RET
-	
-; CARRO_FRAME1
-MOSTRA_CARROS:
-	MOV AH,0 ; COLUNA
-	MOV AL,5 ; LINHA
-	CALL GLCD_GOTO_XY_TEXT
-	MOV BH,0
-    LEA SI, CARRO_FRAME1
-    CALL PRINT_ICON
-	RET
+        MOV      AH,9                                                                              ; COLUNA
+        MOV      AL,2                                                                              ; LINHA
+        CALL     GLCD_GOTO_XY_TEXT
+        MOV      BH,0
+        LEA      SI, SINAL_MENOS_PREENCHIDO
+        CALL     PRINT_ICON
+        RET
 
-;POSICIONA CURSOR COLUNA 0, LINHA 0 
-;IMPRIME LETRA "A"	
-;	MOV AH,7 ;COLUNA
-;	MOV AL,0 ;LINHA
-;        CALL GLCD_GOTO_XY_TEXT
-;	MOV AL,"A"
-;	CALL PRINT_CAR
+ANIMACAO_CARRO:
+        MOV     AH,0                                                                             ; COLUNA
+        MOV     AL,4                                                                            ; LINHA
+        CALL    GLCD_GOTO_XY_TEXT
+        MOV     BH,0
 
-;POSICIONA CURSOR COLUNA 15, LINHA 1
-;IMPRIME LETRA "B"		
-;	MOV AH,15 ;COLUNA
-;	MOV AL,1  ;LINHA
-;       CALL GLCD_GOTO_XY_TEXT
-;	MOV AL,"B"
-;	CALL PRINT_CAR
-	
-;POSICIONA CURSOR COLUNA 7, LINHA 7
-;IMPRIME LETRA "C"		
-;	MOV AH,15 ;COLUNA
-;	MOV AL,7  ;LINHA
-;        CALL GLCD_GOTO_XY_TEXT
-;	MOV AL,"C"
-;	CALL PRINT_CAR
-	
-;sprite 24x24 bits
-;AH = LINHA, COLUNA = AL
-;        LEA SI, FLECHA
-;	MOV AH,0 ;COLUNA
-;	MOV AL,0  ;LINHA
-;        CALL PRINT_ICON
-	
-;sprite 24x24 bits
-;AH = LINHA, COLUNA = AL
-;        LEA SI, BOOK_OPEN
-;	MOV AH,0 ;COLUNA
-;	MOV AL,0  ;LINHA
-;        CALL PRINT_ICON
+        CALL    CARRO_F1
+        MOV     CX,2
+        CALL    DELAY_SEG
+
+        CALL    CARRO_F2
+        MOV     CX,2
+        CALL    DELAY_SEG
+
+        CALL    CARRO_F3
+        MOV     CX,2
+        CALL    DELAY_SEG
+
+        CALL    CARRO_F4
+        MOV     CX,2
+        CALL    DELAY_SEG
+
+        CALL    CARRO_F5
+        MOV     CX,2
+        CALL    DELAY_SEG
+
+        CALL    CARRO_F6
+        MOV     CX,2
+        CALL    DELAY_SEG
+
+        CALL    CARRO_F7
+        MOV     CX,2
+        CALL    DELAY_SEG
+
+        RET
+
+CARRO_F1:
+        CMP     CX,0
+        LEA     SI, CARRO_FRAME1
+        JE      PRINT_ICON
+        RET
+CARRO_F2:
+        CMP     CX,0
+        LEA     SI, CARRO_FRAME2
+        JE      PRINT_ICON
+        RET
+CARRO_F3:
+        CMP     CX,0
+        LEA     SI, CARRO_FRAME3
+        JE      PRINT_ICON
+        RET
+CARRO_F4:
+        CMP     CX,0
+        LEA     SI, CARRO_FRAME4
+        JE      PRINT_ICON
+        RET
+
+CARRO_F5:
+        CMP     CX,0
+        LEA     SI, CARRO_FRAME5
+        JE      PRINT_ICON
+        RET
+
+CARRO_F6:
+        CMP     CX,0
+        LEA     SI, CARRO_FRAME6
+        JE      PRINT_ICON
+        RET
+
+CARRO_F7:
+        CMP     CX,0
+        LEA     SI, CARRO_FRAME7
+        JE      PRINT_ICON
+        RET
+
+TEXT_OPERACOES:
+        MOV AH,3 ;COLUNA
+        MOV AL,4  ;LINHA
+        CALL GLCD_GOTO_XY_TEXT
+        MOV AL,"O"
+        CALL PRINT_CAR  
+        
+        MOV AH,4 ;COLUNA
+        MOV AL,4  ;LINHA
+        CALL GLCD_GOTO_XY_TEXT
+        MOV AL,"P"
+        CALL PRINT_CAR  
+
+        MOV AH,5 ;COLUNA
+        MOV AL,4  ;LINHA
+        CALL GLCD_GOTO_XY_TEXT
+        MOV AL,"E"
+        CALL PRINT_CAR  
+
+        MOV AH,6 ;COLUNA
+        MOV AL,4  ;LINHA
+        CALL GLCD_GOTO_XY_TEXT
+        MOV AL,"R"
+        CALL PRINT_CAR  
+        
+        MOV AH,7 ;COLUNA
+        MOV AL,4  ;LINHA
+        CALL GLCD_GOTO_XY_TEXT
+        MOV AL,"A"
+        CALL PRINT_CAR  
+
+        MOV AH,8 ;COLUNA
+        MOV AL,4  ;LINHA
+        CALL GLCD_GOTO_XY_TEXT
+        MOV AL,"C"
+        CALL PRINT_CAR  
+
+        MOV AH,9 ;COLUNA
+        MOV AL,4  ;LINHA
+        CALL GLCD_GOTO_XY_TEXT
+        MOV AL,"O"
+        CALL PRINT_CAR  
+
+        MOV AH,10 ;COLUNA
+        MOV AL,4  ;LINHA
+        CALL GLCD_GOTO_XY_TEXT
+        MOV AL,"E"
+        CALL PRINT_CAR  
+
+        MOV AH,11 ;COLUNA
+        MOV AL,4  ;LINHA
+        CALL GLCD_GOTO_XY_TEXT
+        MOV AL,"S"
+        CALL PRINT_CAR
+
+        RET  
+
+TEXT_NIVEL1:
+        MOV AH,5 ;COLUNA
+        MOV AL,4  ;LINHA
+        CALL GLCD_GOTO_XY_TEXT
+        MOV AL,"N"
+        CALL PRINT_CAR 
+        
+        MOV AH,6 ;COLUNA
+        MOV AL,4  ;LINHA
+        CALL GLCD_GOTO_XY_TEXT
+        MOV AL,"I"
+        CALL PRINT_CAR 
+        
+        MOV AH,7 ;COLUNA
+        MOV AL,4  ;LINHA
+        CALL GLCD_GOTO_XY_TEXT
+        MOV AL,"V"
+        CALL PRINT_CAR 
+
+        MOV AH,8 ;COLUNA
+        MOV AL,4  ;LINHA
+        CALL GLCD_GOTO_XY_TEXT
+        MOV AL,"E"
+        CALL PRINT_CAR 
+
+        MOV AH,9 ;COLUNA
+        MOV AL,4  ;LINHA
+        CALL GLCD_GOTO_XY_TEXT
+        MOV AL,"L"
+        CALL PRINT_CAR 
+
+        MOV AH,10 ;COLUNA
+        MOV AL,4  ;LINHA
+        CALL GLCD_GOTO_XY_TEXT
+        MOV AL," "
+        CALL PRINT_CAR 
+
+        MOV AH,11 ;COLUNA
+        MOV AL,4  ;LINHA
+        CALL GLCD_GOTO_XY_TEXT
+        MOV AL,"1"
+        CALL PRINT_CAR 
+
+        RET
+
+        ; POSICIONA CURSOR COLUNA 0, LINHA 0
+        ; IMPRIME LETRA "A"
+        ; MOV AH,7 ;COLUNA
+        ; MOV AL,0 ;LINHA
+        ; CALL GLCD_GOTO_XY_TEXT
+        ; MOV AL,"A"
+        ; CALL PRINT_CAR
+
+        ; POSICIONA CURSOR COLUNA 15, LINHA 1
+        ; IMPRIME LETRA "B"
+        ; MOV AH,15 ;COLUNA
+        ; MOV AL,1  ;LINHA
+        ; CALL GLCD_GOTO_XY_TEXT
+        ; MOV AL,"B"
+        ; CALL PRINT_CAR
+
+        ; POSICIONA CURSOR COLUNA 7, LINHA 7
+        ; IMPRIME LETRA "C"
+        ; MOV AH,15 ;COLUNA
+        ; MOV AL,7  ;LINHA
+        ; CALL GLCD_GOTO_XY_TEXT
+        ; MOV AL,"C"
+        ; CALL PRINT_CAR
+
+        ; sprite 24x24 bits
+        ; AH = LINHA, COLUNA = AL
+        ; LEA SI, FLECHA
+        ; MOV AH,0 ;COLUNA
+        ; MOV AL,0  ;LINHA
+        ; CALL PRINT_ICON
+
+        ; sprite 24x24 bits
+        ; AH = LINHA, COLUNA = AL
+        ; LEA SI, BOOK_OPEN
+        ; MOV AH,0 ;COLUNA
+        ; MOV AL,0  ;LINHA
+        ; CALL PRINT_ICON
 
 
-;sprite 32x32 bits
-;AH = LINHA, COLUNA = AL
-;        LEA SI, GUY
-;	MOV AH,5 ;COLUNA
-;	MOV AL,4  ;LINHA
-;       CALL PRINT_ICON
+        ; sprite 32x32 bits
+        ; AH = LINHA, COLUNA = AL
+        ; LEA SI, GUY
+        ; MOV AH,5 ;COLUNA
+        ; MOV AL,4  ;LINHA
+        ; CALL PRINT_ICON
 
-;APAGA DISPLAY
-;	CALL GLCD_CLR
+        ; APAGA DISPLAY
+        ; CALL GLCD_CLR
 
 
-;sprite 128x64 bits
-;AH = LINHA, COLUNA = AL
-;        LEA SI, FORMULA_1
-;	MOV AH,0 ;COLUNA
-;	MOV AL,0  ;LINHA
-;       CALL PRINT_ICON
+        ; sprite 128x64 bits
+        ; AH = LINHA, COLUNA = AL
+        ; LEA SI, FORMULA_1
+        ; MOV AH,0 ;COLUNA
+        ; MOV AL,0  ;LINHA
+        ; CALL PRINT_ICON
 
-	
-;COLOCA UM PIXEL NA CANTO DIREITO SUPERIOR	
-;Coluna 127, linha 0
-;	 MOV AH,127
-;	 MOV AL,0
-;	 MOV BH,1
-;	 CALL GLCD_DRAW_POINT
 
-;Coluna 126, linha 1
-;	 MOV AH,126
-;	 MOV AL,1
-;	 MOV BH,1
-;	 CALL GLCD_DRAW_POINT
+        ; COLOCA UM PIXEL NA CANTO DIREITO SUPERIOR
+        ; Coluna 127, linha 0
+        ; MOV AH,127
+        ; MOV AL,0
+        ; MOV BH,1
+        ; CALL GLCD_DRAW_POINT
 
-;APAGA UM PIXEL NA CANTO DIREITO SUPERIOR	
-;	 MOV AH,127
-;	 MOV AL,0
-;	 MOV BH,0
-;	 CALL GLCD_DRAW_POINT
+        ; Coluna 126, linha 1
+        ; MOV AH,126
+        ; MOV AL,1
+        ; MOV BH,1
+        ; CALL GLCD_DRAW_POINT
 
-;APAGA DISPLAY
-;	CALL GLCD_CLR
-		
-;APONTA PARA CAMINHAO
-;	LEA SI, FORMULA_1
-;PLOTA CAMINHAO
-;	CALL PLOT_BMP	
-	
-;	JMP DEMO
-	
+        ; APAGA UM PIXEL NA CANTO DIREITO SUPERIOR
+        ; MOV AH,127
+        ; MOV AL,0
+        ; MOV BH,0
+        ; CALL GLCD_DRAW_POINT
+
+        ; APAGA DISPLAY
+        ; CALL GLCD_CLR
+
+        ; APONTA PARA CAMINHAO
+        ; LEA SI, FORMULA_1
+        ; PLOTA CAMINHAO
+        ; CALL PLOT_BMP
+
+        ; JMP DEMO
+
+
 .DATA
 GLCD_CONTROL DB 0
 GLCD_DATA    DB 0
@@ -840,205 +1094,205 @@ QNT_COLUNAS DB 0
 SALVA_QNT_COLUNAS DB 0
 POS_COLUNAS DB 0
 
-TRUCK 		DB 0,  0,  0,  0,  0,248,  8,  8,  8,  8,  8,  8, 12, 12, 12, 12 
-		DB 12, 10, 10, 10, 10, 10, 10,  9,  9,  9,  9,  9,  9,  9,  9,  9
-		DB 9,  9,  9,  9,  9,  9,  9,  9,  9,  9,137,137,137,137,137,137 
-		DB 137,137,137,137,137,137,137,  9,  9,  9,  9,  9,  9,  9,  9,  9
-		DB   9,  9, 13,253, 13,195,  6,252,  0,  0,  0,  0,  0,  0,  0,  0 
-		DB   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0 
-		DB   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0 
-		DB   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0 
-		DB   0,  0,  0,  0,  0,255,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0 
-		DB 240,240,240,240,240,224,224,240,240,240,240,240,224,192,192,224 
-		DB 240,240,240,240,240,224,192,  0,  0,  0,255,255,255,255,255,195 
-		DB 195,195,195,195,195,195,  3,  0,  0,  0,  0,  0,  0,  0,  0,  0 
-		DB   0,  0,  0,255,240, 79,224,255, 96, 96, 96, 32, 32, 32, 32, 32
-		DB  32, 32, 32, 32, 32, 32, 32, 32, 64, 64, 64, 64,128,  0,  0,  0 
-		DB   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0 
-		DB  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0 
-		DB   0,  0,  0,  0,  0,255,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0 
-		DB 255,255,255,255,255,  0,  0,  0,  0,255,255,255,255,255,  0,  0 
-		DB   0,  0,255,255,255,255,255,  0,  0,  0,255,255,255,255,255,129 
-		DB 129,129,129,129,129,129,128,  0,  0,  0,  0,  0,  0,  0,  0,  0 
-		DB   0,  0,  0,255,  1,248,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8 
-		DB   8,  8,  8,  8, 16,224, 24, 36,196, 70,130,130,133,217,102,112 
-		DB  160,192, 96, 96, 32, 32,160,160,224,224,192, 64, 64,128,128,192 
-		DB  64,128,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0 
-		DB   0,  0,  0,  0,  0, 63, 96, 96, 96,224, 96, 96, 96, 96, 96, 96 
-		DB  99, 99, 99, 99, 99, 96, 96, 96, 96, 99, 99, 99, 99, 99, 96, 96 
-		DB  96, 96, 99, 99, 99, 99, 99, 96, 96, 96, 99, 99, 99, 99, 99, 99 
-		DB  99, 99, 99, 99, 99, 99, 99, 96, 96, 96, 96, 96, 96, 96, 64, 64 
-		DB  64,224,224,255,246,  1, 14,  6,  6,  2,  2,  2,  2,  2,  2,  2 
-		DB   2,  2,  2,  2,130, 67,114, 62, 35, 16, 16,  0,  7,  3,  3,  2 
-		DB   4,  4,  4,  4,  4,  4,  4, 28, 16, 16, 16, 17, 17,  9,  9, 41
-		DB 112, 32, 67,  5,240,126,174,128, 56,  0,  0,  0,  0,  0,  0,  0
-		DB   0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  1,  1,  1,  1,  1,  1 
-		DB   1,  1,127,127,127,127,255,255,247,251,123,191, 95, 93,125,189 
-		DB 189, 63, 93, 89,177,115,243,229,207, 27, 63,119,255,207,191,255 
-		DB 255,255,255,255,255,255,255,127,127,127,127,127,127,127,127,255 
-		DB 255,255,127,127,125,120,120,120,120,120,248,120,120,120,120,120 
-		DB 120,248,248,232,143,  0,  0,  0,  0,  0,  0,  0,  0,128,240,248 
-		DB 120,188,220, 92,252, 28, 28, 60, 92, 92, 60,120,248,248, 96,192 
-		DB 143,168,216,136, 49, 68, 72, 50,160, 96,  0,  0,  0,  0,  0,  0 
-		DB   0,  0,  0,128,192,248,248,248,248,252,254,254,254,254,254,254 
-		DB 254,254,254,254,254,255,255,255,255,255,246,239,208,246,174,173 
-		DB 169,128,209,208,224,247,249,255,255,252,220,240,127,255,223,255 
-		DB 255,255,255,255,255,254,254,255,255,255,255,255,255,255,254,255 
-		DB 255,255,255,255,255,255,254,254,254,254,254,254,254,254,254,254 
-		DB 254,254,254,254,255,255,255,255,255,255,254,255,190,255,255,253 
-		DB 240,239,221,223,254,168,136,170,196,208,228,230,248,127,126,156 
-		DB 223,226,242,242,242,242,242,177, 32,  0,  0,  0,  0,  0,  0,  0 
-		DB   0,  0,  0,  1,  1,  1,  1,  3,  3,  3,  7,  7,  7,  7,  7, 15 
-		DB  15, 15,  7, 15, 15, 15,  7,  7, 15, 14, 15, 13, 15, 47, 43, 43 
-		DB  43, 43, 43, 47,111,239,255,253,253,255,254,255,255,255,255,255 
-		DB 191,191,239,239,239,191,255,191,255,255,255,255,255,255,255,255 
-		DB 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255 
-		DB 255,255,255,255,127,127,127,127,255,255,191,191,191,191,255,254 
-		DB 255,253,255,255,255,251,255,255,255,127,125, 63, 31, 31, 31, 31 
-		DB  31, 31, 63, 15, 15,  7,  7,  3,  3,  3,  0,  0,  0,  0,  0,  0 
-		DB   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0 
-		DB   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0 
-		DB   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  1,  0 
-		DB   1,  1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  1,  1,  1 
-		DB   1,  1,  1,  1,  3,  3,  3, 11, 11, 11, 11,  7,  3, 14,  6,  6 
-		DB   6,  2, 18, 19, 19,  3, 23, 21, 21, 17,  1, 19, 19,  3,  6,  6 
-		DB  14, 15, 15,  7, 15, 15, 15, 11,  2,  0,  0,  0,  0,  0,  0,  0 
-		DB   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0 
+TRUCK 		DB 0,  0,  0,  0,  0,248,  8,  8,  8,  8,  8,  8, 12, 12, 12, 12
+          DB       12, 10, 10, 10, 10, 10, 10,  9,  9,  9,  9,  9,  9,  9,  9,  9
+          DB       9,  9,  9,  9,  9,  9,  9,  9,  9,  9,137,137,137,137,137,137
+          DB       137,137,137,137,137,137,137,  9,  9,  9,  9,  9,  9,  9,  9,  9
+          DB       9,  9, 13,253, 13,195,  6,252,  0,  0,  0,  0,  0,  0,  0,  0
+          DB       0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0
+          DB       0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0
+          DB       0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0
+          DB       0,  0,  0,  0,  0,255,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0
+          DB       240,240,240,240,240,224,224,240,240,240,240,240,224,192,192,224
+          DB       240,240,240,240,240,224,192,  0,  0,  0,255,255,255,255,255,195
+          DB       195,195,195,195,195,195,  3,  0,  0,  0,  0,  0,  0,  0,  0,  0
+          DB       0,  0,  0,255,240, 79,224,255, 96, 96, 96, 32, 32, 32, 32, 32
+          DB       32, 32, 32, 32, 32, 32, 32, 32, 64, 64, 64, 64,128,  0,  0,  0
+          DB       0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0
+          DB       0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0
+          DB       0,  0,  0,  0,  0,255,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0
+          DB       255,255,255,255,255,  0,  0,  0,  0,255,255,255,255,255,  0,  0
+          DB       0,  0,255,255,255,255,255,  0,  0,  0,255,255,255,255,255,129
+          DB       129,129,129,129,129,129,128,  0,  0,  0,  0,  0,  0,  0,  0,  0
+          DB       0,  0,  0,255,  1,248,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8
+          DB       8,  8,  8,  8, 16,224, 24, 36,196, 70,130,130,133,217,102,112
+          DB       160,192, 96, 96, 32, 32,160,160,224,224,192, 64, 64,128,128,192
+          DB       64,128,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0
+          DB       0,  0,  0,  0,  0, 63, 96, 96, 96,224, 96, 96, 96, 96, 96, 96
+          DB       99, 99, 99, 99, 99, 96, 96, 96, 96, 99, 99, 99, 99, 99, 96, 96
+          DB       96, 96, 99, 99, 99, 99, 99, 96, 96, 96, 99, 99, 99, 99, 99, 99
+          DB       99, 99, 99, 99, 99, 99, 99, 96, 96, 96, 96, 96, 96, 96, 64, 64
+          DB       64,224,224,255,246,  1, 14,  6,  6,  2,  2,  2,  2,  2,  2,  2
+          DB       2,  2,  2,  2,130, 67,114, 62, 35, 16, 16,  0,  7,  3,  3,  2
+          DB       4,  4,  4,  4,  4,  4,  4, 28, 16, 16, 16, 17, 17,  9,  9, 41
+          DB       112, 32, 67,  5,240,126,174,128, 56,  0,  0,  0,  0,  0,  0,  0
+          DB       0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  1,  1,  1,  1,  1,  1
+          DB       1,  1,127,127,127,127,255,255,247,251,123,191, 95, 93,125,189
+          DB       189, 63, 93, 89,177,115,243,229,207, 27, 63,119,255,207,191,255
+          DB       255,255,255,255,255,255,255,127,127,127,127,127,127,127,127,255
+          DB       255,255,127,127,125,120,120,120,120,120,248,120,120,120,120,120
+          DB       120,248,248,232,143,  0,  0,  0,  0,  0,  0,  0,  0,128,240,248
+          DB       120,188,220, 92,252, 28, 28, 60, 92, 92, 60,120,248,248, 96,192
+          DB       143,168,216,136, 49, 68, 72, 50,160, 96,  0,  0,  0,  0,  0,  0
+          DB       0,  0,  0,128,192,248,248,248,248,252,254,254,254,254,254,254
+          DB       254,254,254,254,254,255,255,255,255,255,246,239,208,246,174,173
+          DB       169,128,209,208,224,247,249,255,255,252,220,240,127,255,223,255
+          DB       255,255,255,255,255,254,254,255,255,255,255,255,255,255,254,255
+          DB       255,255,255,255,255,255,254,254,254,254,254,254,254,254,254,254
+          DB       254,254,254,254,255,255,255,255,255,255,254,255,190,255,255,253
+          DB       240,239,221,223,254,168,136,170,196,208,228,230,248,127,126,156
+          DB       223,226,242,242,242,242,242,177, 32,  0,  0,  0,  0,  0,  0,  0
+          DB       0,  0,  0,  1,  1,  1,  1,  3,  3,  3,  7,  7,  7,  7,  7, 15
+          DB       15, 15,  7, 15, 15, 15,  7,  7, 15, 14, 15, 13, 15, 47, 43, 43
+          DB       43, 43, 43, 47,111,239,255,253,253,255,254,255,255,255,255,255
+          DB       191,191,239,239,239,191,255,191,255,255,255,255,255,255,255,255
+          DB       255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+          DB       255,255,255,255,127,127,127,127,255,255,191,191,191,191,255,254
+          DB       255,253,255,255,255,251,255,255,255,127,125, 63, 31, 31, 31, 31
+          DB       31, 31, 63, 15, 15,  7,  7,  3,  3,  3,  0,  0,  0,  0,  0,  0
+          DB       0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0
+          DB       0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0
+          DB       0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  1,  0
+          DB       1,  1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  1,  1,  1
+          DB       1,  1,  1,  1,  3,  3,  3, 11, 11, 11, 11,  7,  3, 14,  6,  6
+          DB       6,  2, 18, 19, 19,  3, 23, 21, 21, 17,  1, 19, 19,  3,  6,  6
+          DB       14, 15, 15,  7, 15, 15, 15, 11,  2,  0,  0,  0,  0,  0,  0,  0
+          DB       0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0
 
 
 FONTS  	        DB      32*5 DUP(0)
-	        DB	00H, 00H, 00H, 00H, 00H ; (space)
-		DB	00H, 00H, 5FH, 00H, 00H ; !
-		DB	00H, 07H, 00H, 07H, 00H ; "
-		DB	14H, 7FH, 14H, 7FH, 14H ; #
-		DB	24H, 2AH, 7FH, 2AH, 12H ; $
-		DB	23H, 13H, 08H, 64H, 62H ; %
-		DB	36H, 49H, 55H, 22H, 50H; &
-		DB	00H, 05H, 03H, 00H, 00H; '
-		DB	00H, 1CH, 22H, 41H, 00H; (
-		DB	00H, 41H, 22H, 1CH, 00H; )
-		DB	08H, 2AH, 1CH, 2AH, 08H; *
-		DB	08H, 08H, 3EH, 08H, 08H; +
-		DB	00H, 50H, 30H, 00H, 00H; H,
-		DB	08H, 08H, 08H, 08H, 08H; -
-		DB	00H, 60H, 60H, 00H, 00H; .
-		DB	20H, 10H, 08H, 04H, 02H; /
-		DB	3EH, 51H, 49H, 45H, 3EH; 0
-		DB	00H, 42H, 7FH, 40H, 00H; 1
-		DB	42H, 61H, 51H, 49H, 46H; 2
-		DB	21H, 41H, 45H, 4BH, 31H; 3
-		DB	18H, 14H, 12H, 7FH, 10H; 4
-		DB	27H, 45H, 45H, 45H, 39H; 5
-		DB	3CH, 4AH, 49H, 49H, 30H; 6
-		DB	01H, 71H, 09H, 05H, 03H; 7
-		DB	36H, 49H, 49H, 49H, 36H; 8
-		DB	06H, 49H, 49H, 29H, 1EH; 9
-		DB	00H, 36H, 36H, 00H, 00H; :
-		DB	00H, 56H, 36H, 00H, 00H; ;
-		DB	00H, 08H, 14H, 22H, 41H; <
-		DB	14H, 14H, 14H, 14H, 14H; =
-		DB	41H, 22H, 14H, 08H, 00H; >
-		DB	02H, 01H, 51H, 09H, 06H; ?
-		DB	32H, 49H, 79H, 41H, 3EH; @
-		DB	7EH, 11H, 11H, 11H, 7EH; A
-		DB	7FH, 49H, 49H, 49H, 36H; B
-		DB	3EH, 41H, 41H, 41H, 22H; C
-		DB	7FH, 41H, 41H, 22H, 1CH; D
-		DB	7FH, 49H, 49H, 49H, 41H; E
-		DB	7FH, 09H, 09H, 01H, 01H; F
-		DB	3EH, 41H, 41H, 51H, 32H; G
-		DB	7FH, 08H, 08H, 08H, 7FH; H
-		DB	00H, 41H, 7FH, 41H, 00H; I
-		DB	20H, 40H, 41H, 3FH, 01H; J
-		DB	7FH, 08H, 14H, 22H, 41H; K
-		DB	7FH, 40H, 40H, 40H, 40H; L
-		DB	7FH, 02H, 04H, 02H, 7FH; M
-		DB	7FH, 04H, 08H, 10H, 7FH; N
-		DB	3EH, 41H, 41H, 41H, 3EH; O
-		DB	7FH, 09H, 09H, 09H, 06H; P
-		DB	3EH, 41H, 51H, 21H, 5EH; Q
-		DB	7FH, 09H, 19H, 29H, 46H; R
-		DB	46H, 49H, 49H, 49H, 31H; S
-		DB	01H, 01H, 7FH, 01H, 01H; T
-		DB	3FH, 40H, 40H, 40H, 3FH; U
-		DB	1FH, 20H, 40H, 20H, 1FH; V
-		DB	7FH, 20H, 18H, 20H, 7FH; W
-		DB	63H, 14H, 08H, 14H, 63H; X
-		DB	03H, 04H, 78H, 04H, 03H; Y
-		DB	61H, 51H, 49H, 45H, 43H; Z
-		DB	00H, 00H, 7FH, 41H, 41H; [
-		DB	02H, 04H, 08H, 10H, 20H; "\"
-		DB	41H, 41H, 7FH, 00H, 00H; ]
-		DB	04H, 02H, 01H, 02H, 04H; ^
-		DB	40H, 40H, 40H, 40H, 40H; _
-		DB	00H, 01H, 02H, 04H, 00H; `
-		DB	20H, 54H, 54H, 54H, 78H; a
-		DB	7FH, 48H, 44H, 44H, 38H; b
-		DB	38H, 44H, 44H, 44H, 20H; c
-		DB	38H, 44H, 44H, 48H, 7FH; d
-		DB	38H, 54H, 54H, 54H, 18H; e
-		DB	08H, 7EH, 09H, 01H, 02H; f
-		DB	08H, 14H, 54H, 54H, 3CH; g
-		DB	7FH, 08H, 04H, 04H, 78H; h
-		DB	00H, 44H, 7DH, 40H, 00H; i
-		DB	20H, 40H, 44H, 3DH, 00H; j
-		DB	00H, 7FH, 10H, 28H, 44H; k
-		DB	00H, 41H, 7FH, 40H, 00H; l
-		DB	7CH, 04H, 18H, 04H, 78H; m
-		DB	7CH, 08H, 04H, 04H, 78H; n
-		DB	38H, 44H, 44H, 44H, 38H; o
-		DB	7CH, 14H, 14H, 14H, 08H; p
-		DB	08H, 14H, 14H, 18H, 7CH; q
-		DB	7CH, 08H, 04H, 04H, 08H; r
-		DB	48H, 54H, 54H, 54H, 20H; s
-		DB	04H, 3FH, 44H, 40H, 20H; t
-		DB	3CH, 40H, 40H, 20H, 7CH; u
-		DB	1CH, 20H, 40H, 20H, 1CH; v
-		DB	3CH, 40H, 30H, 40H, 3CH; w
-		DB	44H, 28H, 10H, 28H, 44H; x
-		DB	0CH, 50H, 50H, 50H, 3CH; y
-		DB	44H, 64H, 54H, 4CH, 44H; z
-		DB       00H, 08H, 36H, 41H, 00H; {
-		DB	00H, 00H, 7FH, 00H, 00H; |
-		DB	00H, 41H, 36H, 08H, 00H; }
-		DB	08H, 08H, 2AH, 1CH, 08H; ->
-		DB	08H, 1CH, 2AH, 08H, 08 ; <-
+          DB       00H, 00H, 00H, 00H, 00H                                                           ; (space)
+          DB       00H, 00H, 5FH, 00H, 00H                                                           ; !
+          DB       00H, 07H, 00H, 07H, 00H                                                           ; "
+          DB       14H, 7FH, 14H, 7FH, 14H                                                           ; #
+          DB       24H, 2AH, 7FH, 2AH, 12H                                                           ; $
+          DB       23H, 13H, 08H, 64H, 62H                                                           ; %
+          DB       36H, 49H, 55H, 22H, 50H                                                           ; &
+          DB       00H, 05H, 03H, 00H, 00H                                                           ; '
+          DB       00H, 1CH, 22H, 41H, 00H                                                           ; (
+          DB       00H, 41H, 22H, 1CH, 00H                                                           ; )
+          DB       08H, 2AH, 1CH, 2AH, 08H                                                           ; *
+          DB       08H, 08H, 3EH, 08H, 08H                                                           ; +
+          DB       00H, 50H, 30H, 00H, 00H                                                           ; H,
+          DB       08H, 08H, 08H, 08H, 08H                                                           ; -
+          DB       00H, 60H, 60H, 00H, 00H                                                           ; .
+          DB       20H, 10H, 08H, 04H, 02H                                                           ; /
+          DB       3EH, 51H, 49H, 45H, 3EH                                                           ; 0
+          DB       00H, 42H, 7FH, 40H, 00H                                                           ; 1
+          DB       42H, 61H, 51H, 49H, 46H                                                           ; 2
+          DB       21H, 41H, 45H, 4BH, 31H                                                           ; 3
+          DB       18H, 14H, 12H, 7FH, 10H                                                           ; 4
+          DB       27H, 45H, 45H, 45H, 39H                                                           ; 5
+          DB       3CH, 4AH, 49H, 49H, 30H                                                           ; 6
+          DB       01H, 71H, 09H, 05H, 03H                                                           ; 7
+          DB       36H, 49H, 49H, 49H, 36H                                                           ; 8
+          DB       06H, 49H, 49H, 29H, 1EH                                                           ; 9
+          DB       00H, 36H, 36H, 00H, 00H                                                           ; :
+          DB       00H, 56H, 36H, 00H, 00H                                                           ; ;
+          DB       00H, 08H, 14H, 22H, 41H                                                           ; <
+          DB       14H, 14H, 14H, 14H, 14H                                                           ; =
+          DB       41H, 22H, 14H, 08H, 00H                                                           ; >
+          DB       02H, 01H, 51H, 09H, 06H                                                           ; ?
+          DB       32H, 49H, 79H, 41H, 3EH                                                           ; @
+          DB       7EH, 11H, 11H, 11H, 7EH                                                           ; A
+          DB       7FH, 49H, 49H, 49H, 36H                                                           ; B
+          DB       3EH, 41H, 41H, 41H, 22H                                                           ; C
+          DB       7FH, 41H, 41H, 22H, 1CH                                                           ; D
+          DB       7FH, 49H, 49H, 49H, 41H                                                           ; E
+          DB       7FH, 09H, 09H, 01H, 01H                                                           ; F
+          DB       3EH, 41H, 41H, 51H, 32H                                                           ; G
+          DB       7FH, 08H, 08H, 08H, 7FH                                                           ; H
+          DB       00H, 41H, 7FH, 41H, 00H                                                           ; I
+          DB       20H, 40H, 41H, 3FH, 01H                                                           ; J
+          DB       7FH, 08H, 14H, 22H, 41H                                                           ; K
+          DB       7FH, 40H, 40H, 40H, 40H                                                           ; L
+          DB       7FH, 02H, 04H, 02H, 7FH                                                           ; M
+          DB       7FH, 04H, 08H, 10H, 7FH                                                           ; N
+          DB       3EH, 41H, 41H, 41H, 3EH                                                           ; O
+          DB       7FH, 09H, 09H, 09H, 06H                                                           ; P
+          DB       3EH, 41H, 51H, 21H, 5EH                                                           ; Q
+          DB       7FH, 09H, 19H, 29H, 46H                                                           ; R
+          DB       46H, 49H, 49H, 49H, 31H                                                           ; S
+          DB       01H, 01H, 7FH, 01H, 01H                                                           ; T
+          DB       3FH, 40H, 40H, 40H, 3FH                                                           ; U
+          DB       1FH, 20H, 40H, 20H, 1FH                                                           ; V
+          DB       7FH, 20H, 18H, 20H, 7FH                                                           ; W
+          DB       63H, 14H, 08H, 14H, 63H                                                           ; X
+          DB       03H, 04H, 78H, 04H, 03H                                                           ; Y
+          DB       61H, 51H, 49H, 45H, 43H                                                           ; Z
+          DB       00H, 00H, 7FH, 41H, 41H                                                           ; [
+          DB       02H, 04H, 08H, 10H, 20H                                                           ; "\"
+          DB       41H, 41H, 7FH, 00H, 00H                                                           ; ]
+          DB       04H, 02H, 01H, 02H, 04H                                                           ; ^
+          DB       40H, 40H, 40H, 40H, 40H                                                           ; _
+          DB       00H, 01H, 02H, 04H, 00H                                                           ; `
+          DB       20H, 54H, 54H, 54H, 78H                                                           ; a
+          DB       7FH, 48H, 44H, 44H, 38H                                                           ; b
+          DB       38H, 44H, 44H, 44H, 20H                                                           ; c
+          DB       38H, 44H, 44H, 48H, 7FH                                                           ; d
+          DB       38H, 54H, 54H, 54H, 18H                                                           ; e
+          DB       08H, 7EH, 09H, 01H, 02H                                                           ; f
+          DB       08H, 14H, 54H, 54H, 3CH                                                           ; g
+          DB       7FH, 08H, 04H, 04H, 78H                                                           ; h
+          DB       00H, 44H, 7DH, 40H, 00H                                                           ; i
+          DB       20H, 40H, 44H, 3DH, 00H                                                           ; j
+          DB       00H, 7FH, 10H, 28H, 44H                                                           ; k
+          DB       00H, 41H, 7FH, 40H, 00H                                                           ; l
+          DB       7CH, 04H, 18H, 04H, 78H                                                           ; m
+          DB       7CH, 08H, 04H, 04H, 78H                                                           ; n
+          DB       38H, 44H, 44H, 44H, 38H                                                           ; o
+          DB       7CH, 14H, 14H, 14H, 08H                                                           ; p
+          DB       08H, 14H, 14H, 18H, 7CH                                                           ; q
+          DB       7CH, 08H, 04H, 04H, 08H                                                           ; r
+          DB       48H, 54H, 54H, 54H, 20H                                                           ; s
+          DB       04H, 3FH, 44H, 40H, 20H                                                           ; t
+          DB       3CH, 40H, 40H, 20H, 7CH                                                           ; u
+          DB       1CH, 20H, 40H, 20H, 1CH                                                           ; v
+          DB       3CH, 40H, 30H, 40H, 3CH                                                           ; w
+          DB       44H, 28H, 10H, 28H, 44H                                                           ; x
+          DB       0CH, 50H, 50H, 50H, 3CH                                                           ; y
+          DB       44H, 64H, 54H, 4CH, 44H                                                           ; z
+          DB       00H, 08H, 36H, 41H, 00H                                                           ; {
+          DB       00H, 00H, 7FH, 00H, 00H                                                           ; |
+          DB       00H, 41H, 36H, 08H, 00H                                                           ; }
+          DB       08H, 08H, 2AH, 1CH, 08H                                                           ; ->
+          DB       08H, 1CH, 2AH, 08H, 08                                                            ; <-
 
-;24X24 (3 LINHAS 3 COLUNAS)
-;2 PRIMEIROS BYTES CONSTA NUMERO DE LINHAS E COLUNAS ICONE
-;CRIADO COM FASTLCD.EXE
+                                                  ; 24X24 (3 LINHAS 3 COLUNAS)
+                                                  ; 2 PRIMEIROS BYTES CONSTA NUMERO DE LINHAS E COLUNAS ICONE
+                                                  ; CRIADO COM FASTLCD.EXE
 BOOK	DB 3,3,00H,00H,00H,0E0H,20H,38H,28H,2EH
-	DB 2AH,2AH,2AH,2AH,2AH,2AH,2AH,0EAH
-	DB 0AH,0FAH,02H,0FEH,00H,00H,00H,00H
-        DB 00H,00H,00H,0FFH,00H,0ABH,2AH,2AH
-	DB 0ABH,0AAH,0AAH,0ABH,0ABH,29H,00H,0FFH
-	DB 00H,0FFH,00H,0FFH,00H,00H,00H,00H
-        DB 00H,00H,00H,7FH,40H,40H,40H,40H
-	DB 40H,40H,48H,48H,48H,40H,40H,7FH
-	DB 10H,1FH,04H,07H,00H,00H,00H,00H
+          DB       2AH,2AH,2AH,2AH,2AH,2AH,2AH,0EAH
+          DB       0AH,0FAH,02H,0FEH,00H,00H,00H,00H
+          DB       00H,00H,00H,0FFH,00H,0ABH,2AH,2AH
+          DB       0ABH,0AAH,0AAH,0ABH,0ABH,29H,00H,0FFH
+          DB       00H,0FFH,00H,0FFH,00H,00H,00H,00H
+          DB       00H,00H,00H,7FH,40H,40H,40H,40H
+          DB       40H,40H,48H,48H,48H,40H,40H,7FH
+          DB       10H,1FH,04H,07H,00H,00H,00H,00H
 
-;24X24 (3 LINHAS 3 COLUNAS)
-;2 PRIMEIROS BYTES CONSTA NUMERO DE LINHAS E COLUNAS ICONE
-;CRIADO COM FASTLCD.EXE
+          ; 24X24 (3 LINHAS 3 COLUNAS)
+          ; 2 PRIMEIROS BYTES CONSTA NUMERO DE LINHAS E COLUNAS ICONE
+          ; CRIADO COM FASTLCD.EXE
 BOOK_OPEN	DB 	3,3,00H,00H,00H,00H,00H,0F8H,08H,0CEH
-		DB	8AH,8AH,0CAH,8AH,8AH,0CAH,0CAH,4AH
-		DB	0AH,0FAH,02H,0FEH,00H,00H,00H,00H
-		DB 	48H,24H,82H,0DAH,0CDH,0E5H,76H,0EAH
-		DB	1AH,6AH,0AAH,2AH,2AH,2AH,2AH,0AH
-		DB 	00H,0FFH,00H,0FFH,00H,00H,00H,00H
-		DB	0DEH,1FH,0FH,0BH,07H,03H,03H,01H
-		DB 	30H,18H,18H,03H,06H,0AH,0B2H,50H
-		DB 	10H,1FH,04H,07H,00H,00H,00H,00H
+          DB       8AH,8AH,0CAH,8AH,8AH,0CAH,0CAH,4AH
+          DB       0AH,0FAH,02H,0FEH,00H,00H,00H,00H
+          DB       48H,24H,82H,0DAH,0CDH,0E5H,76H,0EAH
+          DB       1AH,6AH,0AAH,2AH,2AH,2AH,2AH,0AH
+          DB       00H,0FFH,00H,0FFH,00H,00H,00H,00H
+          DB       0DEH,1FH,0FH,0BH,07H,03H,03H,01H
+          DB       30H,18H,18H,03H,06H,0AH,0B2H,50H
+          DB       10H,1FH,04H,07H,00H,00H,00H,00H
 
 GUY DB 4,4
-	DB 00H,000H,010H,010H,018H,008H,008H,008H,048H,008H,00CH,004H,004H,004H,004H,004H
-	DB 04H,004H,004H,004H,044H,004H,004H,004H,00CH,018H,010H,000H,000H,000H,000H,000H
-	DB 00H,01CH,036H,022H,062H,042H,040H,000H,000H,000H,000H,000H,000H,0FCH,084H,080H
-	DB 00H,000H,000H,000H,000H,000H,000H,000H,000H,000H,008H,008H,004H,004H,004H,0FCH
-	DB 00H,000H,000H,000H,000H,004H,004H,01CH,060H,040H,040H,0C0H,080H,080H,080H,080H
-	DB 80H,000H,000H,080H,0C0H,070H,01CH,000H,000H,000H,002H,006H,004H,006H,002H,003H
-	DB 00H,000H,000H,000H,000H,000H,000H,000H,000H,008H,008H,008H,07CH,01FH,025H,024H
-	DB 24H,001H,001H,001H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+          DB       00H,000H,010H,010H,018H,008H,008H,008H,048H,008H,00CH,004H,004H,004H,004H,004H
+          DB       04H,004H,004H,004H,044H,004H,004H,004H,00CH,018H,010H,000H,000H,000H,000H,000H
+          DB       00H,01CH,036H,022H,062H,042H,040H,000H,000H,000H,000H,000H,000H,0FCH,084H,080H
+          DB       00H,000H,000H,000H,000H,000H,000H,000H,000H,000H,008H,008H,004H,004H,004H,0FCH
+          DB       00H,000H,000H,000H,000H,004H,004H,01CH,060H,040H,040H,0C0H,080H,080H,080H,080H
+          DB       80H,000H,000H,080H,0C0H,070H,01CH,000H,000H,000H,002H,006H,004H,006H,002H,003H
+          DB       00H,000H,000H,000H,000H,000H,000H,000H,000H,008H,008H,008H,07CH,01FH,025H,024H
+          DB       24H,001H,001H,001H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
 
 CAMINHAO	DB 16,8
 DB 		000H,000H,000H,000H,000H,0F8H,008H,008H,008H,008H,008H,008H,00CH,00CH,00CH,00CH
@@ -1106,7 +1360,7 @@ DB		006H,002H,012H,013H,013H,003H,017H,015H,015H,011H,001H,013H,013H,003H,006H,0
 DB		00EH,00FH,00FH,007H,00FH,00FH,00FH,00BH,002H,000H,000H,000H,000H,000H,000H,000H
 DB		000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
 
-FLECHA		DB 4,4 
+FLECHA		DB 4,4
 DB		001H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
 DB		000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
 DB	 	000H,000H,000H,0E0H,0E0H,0E0H,0E0H,0E0H,0E0H,0E0H,0E0H,0E0H,0E0H,0E0H,0E0H,0E0H
@@ -1116,73 +1370,9 @@ DB		003H,003H,003H,003H,003H,003H,003H,003H,00FH,007H,003H,001H,000H,000H,000H,0
 DB		000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
 DB		000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
 
-FORMULA_1 DB 	16,8 
-DB 				000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
-DB 				000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
-DB 				000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
-DB 				000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
-DB 				000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
-DB 				000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
-DB 				000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
-DB 				000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
-DB 				000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
-DB 				000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
-DB 				000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
-DB 				000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
-DB 				000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
-DB 				000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
-DB 				000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
-DB 				000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
-DB 				000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
-DB 				000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
-DB 				000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
-DB 				000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
-DB 				000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
-DB 				000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
-DB 				000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
-DB 				000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
-DB 				000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
-DB 				000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
-DB 				000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
-DB 				000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
-DB 				000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
-DB 				000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
-DB 				000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
-DB 				000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
-DB 				000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
-DB 				000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
-DB 				000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
-DB 				000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
-DB 				000H,000H,000H,000H,000H,080H,0E0H,0E0H,0E0H,080H,080H,000H,000H,080H,080H,080H
-DB 				080H,080H,080H,080H,080H,080H,080H,080H,080H,080H,080H,080H,000H,000H,000H,000H
-DB 				000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
-DB 				000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
-DB 				000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
-DB 				000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,080H,080H
-DB 				080H,080H,080H,080H,080H,080H,080H,080H,080H,080H,080H,080H,080H,080H,080H,080H
-DB 				0C0H,0E0H,090H,098H,088H,0ECH,0ECH,0ECH,088H,088H,088H,088H,088H,0D0H,0F0H,0F8H
-DB 				0F8H,0F0H,0F0H,0F0H,0E0H,09FH,0AFH,0FFH,0FFH,0FFH,0F1H,0E0H,0E0H,0E0H,0F0H,0F1H
-DB 				0F0H,0E0H,0E0H,0E1H,0E1H,0E1H,0E0H,0E0H,0C1H,0C1H,083H,083H,094H,030H,064H,07EH
-DB 				0FEH,0FCH,0FCH,0FCH,0F8H,0F8H,0F0H,0F0H,0F0H,0F0H,0FCH,0FFH,0FFH,0FFH,01FH,01FH
-DB 				05FH,07FH,07FH,03FH,01FH,01FH,08FH,087H,083H,0C0H,0C0H,0E0H,070H,000H,000H,000H
-DB 				000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,080H,0C0H,0C0H
-DB 				0C0H,0C0H,080H,0E0H,0F8H,0FCH,07CH,01EH,0CAH,069H,0F9H,0E9H,0E9H,0DBH,03FH,0F7H
-DB 				0CFH,07FH,0FFH,0FFH,0FFH,0FFH,0FFH,07FH,03FH,07FH,07FH,0FFH,0FFH,0FFH,0FFH,0FFH
-DB 				0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH
-DB 				0FFH,001H,003H,003H,017H,01FH,0FFH,01FH,07FH,00FH,007H,007H,00FH,07FH,005H,03DH
-DB 				039H,079H,079H,039H,03BH,01BH,00BH,003H,013H,0F3H,0F3H,0FFH,0FFH,0FFH,0FFH,0FEH
-DB 				0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,03FH,0CFH,0E7H,0F3H
-DB 				0FBH,0FAH,0EAH,0CAH,018H,038H,0F3H,0E7H,01FH,00FH,007H,000H,000H,000H,000H,000H
-DB 				000H,000H,032H,020H,022H,026H,022H,020H,020H,020H,023H,037H,023H,023H,031H,007H
-DB 				007H,007H,007H,00FH,01FH,03FH,07FH,078H,0F7H,0F4H,0F5H,0F5H,0F5H,0FBH,0FCH,07FH
-DB 				03FH,01EH,00FH,007H,007H,003H,001H,00DH,01EH,01EH,01CH,01CH,01FH,01FH,01FH,01FH
-DB 				01FH,01FH,00FH,00FH,00FH,00FH,01FH,01FH,01FH,01FH,01FH,01FH,01FH,01FH,01FH,01FH
-DB 				00CH,008H,008H,008H,00CH,008H,009H,00CH,00EH,008H,009H,009H,008H,00FH,008H,008H
-DB 				008H,00CH,00CH,008H,00CH,00CH,00CH,00CH,00CH,00FH,00FH,00FH,00FH,007H,007H,007H
-DB 				00FH,00FH,00FH,00FH,00FH,00FH,00FH,00FH,00FH,00FH,01FH,03FH,07CH,07FH,0FFH,0FFH
-DB 				0F7H,0F6H,0E7H,0F7H,0F0H,078H,03FH,01FH,006H,000H,000H,000H,000H,000H,000H,000H
 
-; NÌvel 1
+
+; NÔøΩvel 1
 NIVEL_1 	DB 16,8
 DB 			000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
 DB 			000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
@@ -1249,7 +1439,7 @@ DB 			000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
 DB 			000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
 DB 			000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
 
-; OperaÁıes
+; OperaÔøΩÔøΩes
 OPERACOES 	DB 16,8
 DB 			000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
 DB 			000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
@@ -1317,8 +1507,8 @@ DB 			000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
 DB 			000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
 
 ; OSSO
-OSSO 	DB 1,1
-DB 		0FFH,099H,0C3H,066H,024H,024H,024H,024H,024H,024H,024H,024H,066H,0C3H,099H,0FFH
+OSSO DB 2, 1
+        DB              	07EH,0D3H,083H,042H,064H,024H,024H,024H,024H,024H,024H,064H,042H,083H,0D3H,07EH
 
 RETANGULO_FUNDO_NUMEROS DB 8,4
 DB 			0FFH,001H,001H,001H,001H,001H,001H,001H,001H,001H,001H,001H,001H,001H,001H,001H
@@ -1420,34 +1610,286 @@ DB			0C3H,003H,001H,01CH,003H,01EH,07CH,0FEH,0FFH,0FFH,0FFH,0FEH,0FFH,0EDH,0FFH,
 DB			0FFH,07EH,066H,006H,01FH,09FH,03FH,09FH,03FH,08FH,0EFH,043H,063H,04DH,07FH,07FH
 DB			007H,019H,08BH,09BH,0BBH,0B3H,0D3H,0C3H,0F3H,0F8H,078H,00FH,006H,006H,000H,00FH
 
+; CARRO FRAME 1
 CARRO_FRAME1 DB 16, 4
-DB 000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
-DB 000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
-DB 000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
-DB 000H,000H,080H,080H,0C0H,0C0H,0C0H,080H,080H,080H,080H,080H,000H,000H,080H,080H
-DB 000H,000H,000H,000H,0F8H,0FEH,0FEH,0FEH,0F8H,018H,000H,000H,008H,008H,018H,008H
-DB 008H,008H,018H,018H,018H,008H,008H,018H,018H,038H,038H,040H,000H,040H,0E0H,0E0H
-DB 0C0H,0C0H,0C0H,080H,080H,000H,000H,000H,000H,0C0H,0F0H,0F0H,0F0H,0F0H,0F0H,0F0H
-DB 0F0H,0F0H,0F0H,0F0H,0F0H,0F0H,070H,030H,000H,000H,000H,000H,000H,000H,000H,000H
-DB 000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
-DB 000H,000H,000H,080H,0C0H,0C0H,0E0H,0A0H,090H,090H,090H,090H,0B0H,0F8H,078H,0F8H
-DB 0F8H,0F8H,0F8H,0F8H,0F8H,0F8H,0F8H,0F8H,0F8H,0F8H,0F8H,0F8H,0F8H,0F8H,0F8H,0FCH
-DB 0FEH,0F9H,0F9H,0F8H,0FEH,0FEH,0FEH,0F8H,0F8H,0F8H,0F8H,0F8H,0FDH,0FFH,0FFH,0FFH
-DB 01FH,03FH,03FH,07EH,0F9H,0FAH,0FFH,0FFH,0FFH,07FH,07EH,0FEH,0FEH,05FH,0DFH,09FH
-DB 09EH,09EH,09EH,0BEH,0BEH,0BEH,03EH,03CH,03CH,038H,0F8H,0F9H,0F3H,0F6H,0E7H,0FFH
-DB 0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,071H,031H,0B5H
-DB 0A7H,0A7H,0A3H,081H,081H,038H,078H,0F8H,0FCH,07CH,00EH,007H,000H,000H,000H,000H
-DB 000H,020H,000H,020H,060H,020H,000H,000H,000H,030H,070H,030H,038H,01CH,07CH,07CH
-DB 07CH,078H,0FEH,0FFH,0FFH,0F7H,081H,07CH,046H,05FH,05EH,05EH,0BDH,0C3H,0FFH,0FCH
-DB 0E7H,0FFH,07FH,07FH,03FH,01FH,0D7H,0E3H,0E7H,0C7H,0CFH,0FFH,0FFH,0FFH,0FFH,0FFH
-DB 0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0CFH
-DB 080H,080H,080H,0C1H,081H,09FH,0C1H,0E7H,080H,090H,090H,080H,0F7H,080H,083H,083H
-DB 0C7H,0C7H,083H,0C3H,0C1H,0C0H,0C0H,0C1H,0FFH,0FFH,0FFH,0FFH,07FH,07FH,07FH,0FFH
-DB 0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0C3H,0FCH,0FEH,0FFH,07FH
-DB 06FH,07EH,07CH,001H,083H,0FFH,0FEH,061H,000H,000H,000H,000H,000H,000H,000H,000H
+        DB 	000H,000H,000H,000H,000H,000H,000H,000H
+        DB 	000H,000H,000H,000H,000H,000H,000H,000H
+        DB 	000H,000H,000H,000H,000H,000H,000H,000H
+        DB 	000H,000H,000H,000H,000H,000H,000H,000H
+        DB 	000H,000H,000H,000H,000H,000H,000H,000H
+        DB 	000H,000H,000H,000H,000H,000H,000H,000H
+        DB 	000H,000H,000H,000H,080H,080H,080H,000H
+        DB 	000H,000H,000H,000H,000H,000H,000H,000H
+        DB 	000H,000H,000H,000H,0F8H,0FEH,0FEH,0FEH
+        DB 	0F8H,038H,000H,000H,018H,018H,038H,018H
+        DB 	018H,018H,038H,038H,038H,018H,018H,038H
+        DB 	038H,078H,078H,080H,000H,080H,0C0H,0C0H
+        DB 	080H,080H,080H,000H,000H,000H,000H,000H
+        DB 	000H,080H,0E0H,0E0H,0E0H,0E0H,0E0H,0E0H
+        DB 	0E0H,0E0H,0E0H,0E0H,0E0H,0E0H,0E0H,060H
+        DB 	000H,000H,000H,000H,000H,000H,000H,000H
+        DB 	000H,000H,000H,000H,000H,000H,000H,000H
+        DB 	000H,000H,000H,000H,000H,000H,000H,000H
+        DB 	000H,000H,000H,000H,000H,000H,080H,080H
+        DB 	040H,040H,040H,040H,0C0H,0E0H,0E0H,0E0H
+        DB 	0E0H,0E0H,0E0H,0E0H,0E0H,0E0H,0E0H,0E0H
+        DB 	0E0H,0E0H,0E0H,0E0H,0E0H,0E0H,0E0H,0F8H
+        DB 	0FCH,0E2H,0E3H,0E1H,0FDH,0FDH,0FDH,0E1H
+        DB 	0E1H,0E1H,0E1H,0E1H,0FAH,0FEH,0FFH,0FFH
+        DB 	07EH,0FEH,0FEH,0FCH,0E3H,0E5H,0FFH,0FFH
+        DB 	0FFH,0FEH,0FCH,0FCH,0FCH,07EH,07EH,07EH
+        DB 	07CH,07CH,07CH,0FCH,0FCH,0FCH,0FCH,0F8H
+        DB 	0F8H,0E0H,0E0H,0E2H,0C6H,0DCH,09FH,0FFH
+        DB 	0FFH,0FFH,0FFH,0FFH,0FFH,0FEH,0FEH,0FEH
+        DB 	0FEH,0FFH,0FFH,0FFH,0FFH,0C3H,0C3H,0DBH
+        DB 	09FH,09FH,087H,003H,003H,0E1H,0E0H,0E0H
+        DB 	0F8H,0F8H,03CH,01EH,000H,000H,000H,000H
+        DB 	000H,000H,000H,000H,000H,000H,000H,000H
+        DB 	000H,080H,080H,080H,0C0H,0E0H,0E0H,0E0H
+        DB 	0E0H,0C0H,0F8H,0FEH,0FFH,0BFH,007H,0E2H
+        DB 	03AH,0FEH,0FAH,0FAH,0E6H,01FH,0FDH,0E3H
+        DB 	03FH,0FFH,0FFH,0FFH,0FFH,0FFH,0BFH,01FH
+        DB 	03FH,03FH,07FH,0FFH,0FFH,0FFH,0FFH,0FFH
+        DB 	0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH
+        DB 	0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,07FH
+        DB 	000H,000H,000H,005H,007H,0FFH,007H,03FH
+        DB 	003H,081H,081H,003H,0BFH,001H,01FH,01EH
+        DB 	03EH,03EH,01EH,01EH,006H,002H,000H,004H
+        DB 	0FCH,0FCH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH
+        DB 	0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH
+        DB 	0FFH,0FFH,0FFH,01FH,0E3H,0F9H,0FCH,0FEH
+        DB 	07EH,0FAH,0E2H,006H,01EH,0FCH,0F9H,007H
+        DB 	003H,001H,000H,000H,000H,000H,000H,000H
+        DB 	000H,039H,020H,021H,023H,021H,020H,020H
+        DB 	020H,021H,03BH,021H,021H,038H,003H,003H
+        DB 	003H,003H,007H,01FH,03FH,07FH,07CH,0FBH
+        DB 	0FAH,0FAH,0FAH,0FAH,0FDH,0FEH,07FH,03FH
+        DB 	01FH,007H,003H,003H,001H,000H,006H,01FH
+        DB 	01FH,01EH,01EH,01FH,01FH,01FH,01FH,01FH
+        DB 	01FH,007H,007H,007H,007H,01FH,01FH,01FH
+        DB 	01FH,01FH,01FH,01FH,01FH,01FH,01FH,006H
+        DB 	004H,004H,004H,006H,004H,004H,006H,007H
+        DB 	004H,004H,004H,004H,007H,004H,004H,004H
+        DB 	006H,006H,004H,006H,006H,006H,006H,006H
+        DB 	007H,007H,007H,007H,003H,003H,003H,007H
+        DB 	007H,007H,007H,007H,007H,007H,007H,007H
+        DB 	007H,01FH,03FH,07EH,07FH,0FFH,0FFH,0FBH
+        DB 	0FBH,0E3H,0FBH,0F8H,07CH,03FH,01FH,003H
+        DB 	000H,000H,000H,000H,000H,000H,000H,000H
+
+; CARRO FRAME 2
+CARRO_FRAME2 DB 16,4
+        DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+        DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+        DB 	080H,080H,080H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+        DB 	0F8H,0FEH,0FEH,0FEH,0F8H,038H,000H,000H,018H,018H,038H,018H,018H,018H,038H,038H
+        DB 	038H,018H,018H,038H,038H,078H,078H,080H,000H,080H,0C0H,0C0H,080H,080H,080H,000H
+        DB 	000H,000H,000H,000H,000H,080H,0E0H,0E0H,0E0H,0E0H,0E0H,0E0H,0E0H,0E0H,0E0H,0E0H
+        DB 	0E0H,0E0H,0E0H,060H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+        DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+        DB 	000H,000H,080H,080H,040H,040H,040H,040H,0C0H,0E0H,0E0H,0E0H,0E0H,0E0H,0E0H,0E0H
+        DB 	0E0H,0E0H,0E0H,0E0H,0E0H,0E0H,0E0H,0E0H,0E0H,0E0H,0E0H,0F8H,0FCH,0E2H,0E3H,0E1H
+        DB 	0FDH,0FDH,0FDH,0E1H,0E1H,0E1H,0E1H,0E1H,0FAH,0FEH,0FFH,0FFH,07EH,0FEH,0FEH,0FCH
+        DB 	0E3H,0E5H,0FFH,0FFH,0FFH,0FEH,0FCH,0FCH,0FCH,07EH,07EH,07EH,07CH,07CH,07CH,0FCH
+        DB 	0FCH,0FCH,0FCH,0F8H,0F8H,0E0H,0E0H,0E2H,0C6H,0DCH,09FH,0FFH,0FFH,0FFH,0FFH,0FFH
+        DB 	0FFH,0FEH,0FEH,0FEH,0FEH,0FFH,0FFH,0FFH,0FFH,0C3H,0C3H,0DBH,09FH,09FH,087H,003H
+        DB 	003H,0E1H,0E0H,0E0H,0F8H,0F8H,03CH,01EH,000H,000H,000H,000H,000H,000H,000H,000H
+        DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+        DB 	0FFH,0BFH,007H,0E2H,03AH,0FEH,0FAH,0FAH,0E6H,01FH,0FDH,0E3H,03FH,0FFH,0FFH,0FFH
+        DB 	0FFH,0FFH,0BFH,01FH,03FH,03FH,07FH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH
+        DB 	0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,07FH,000H,000H,000H,005H
+        DB 	007H,0FFH,007H,03FH,003H,081H,081H,003H,0BFH,001H,01FH,01EH,03EH,03EH,01EH,01EH
+        DB 	006H,002H,000H,004H,0FCH,0FCH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH
+        DB 	0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,01FH,0E3H,0F9H,0FCH,0FEH,07EH,0FAH,0E2H,006H
+        DB 	01EH,0FCH,0F9H,007H,003H,001H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+        DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+        DB 	03FH,07FH,07CH,0FBH,0FAH,0FAH,0FAH,0FAH,0FDH,0FEH,07FH,03FH,01FH,007H,003H,003H
+        DB 	001H,000H,006H,01FH,01FH,01EH,01EH,01FH,01FH,01FH,01FH,01FH,01FH,007H,007H,007H
+        DB 	007H,01FH,01FH,01FH,01FH,01FH,01FH,01FH,01FH,01FH,01FH,006H,004H,004H,004H,006H
+        DB 	004H,004H,006H,007H,004H,004H,004H,004H,007H,004H,004H,004H,006H,006H,004H,006H
+        DB 	006H,006H,006H,006H,007H,007H,007H,007H,003H,003H,003H,007H,007H,007H,007H,007H
+        DB 	007H,007H,007H,007H,007H,01FH,03FH,07EH,07FH,0FFH,0FFH,0FBH,0FBH,0E3H,0FBH,0F8H
+        DB 	07CH,03FH,01FH,003H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+        DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+
+; CARRO FRAME 3
+CARRO_FRAME3  DB 16, 4
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,080H,080H,080H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,0F8H,0FEH,0FEH,0FEH
+	DB 	0F8H,038H,000H,000H,018H,018H,038H,018H,018H,018H,038H,038H,038H,018H,018H,038H
+	DB 	038H,078H,078H,080H,000H,080H,0C0H,0C0H,080H,080H,080H,000H,000H,000H,000H,000H
+	DB 	000H,080H,0E0H,0E0H,0E0H,0E0H,0E0H,0E0H,0E0H,0E0H,0E0H,0E0H,0E0H,0E0H,0E0H,060H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	0E0H,0E0H,0E0H,0E0H,0E0H,0E0H,0E0H,0F8H,0FCH,0E2H,0E3H,0E1H,0FDH,0FDH,0FDH,0E1H
+	DB 	0E1H,0E1H,0E1H,0E1H,0FAH,0FEH,0FFH,0FFH,07EH,0FEH,0FEH,0FCH,0E3H,0E5H,0FFH,0FFH
+	DB 	0FFH,0FEH,0FCH,0FCH,0FCH,07EH,07EH,07EH,07CH,07CH,07CH,0FCH,0FCH,0FCH,0FCH,0F8H
+	DB 	0F8H,0E0H,0E0H,0E2H,0C6H,0DCH,09FH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FEH,0FEH,0FEH
+	DB 	0FEH,0FFH,0FFH,0FFH,0FFH,0C3H,0C3H,0DBH,09FH,09FH,087H,003H,003H,0E1H,0E0H,0E0H
+	DB 	0F8H,0F8H,03CH,01EH,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	03FH,03FH,07FH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH
+	DB 	0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,07FH,000H,000H,000H,005H,007H,0FFH,007H,03FH
+	DB 	003H,081H,081H,003H,0BFH,001H,01FH,01EH,03EH,03EH,01EH,01EH,006H,002H,000H,004H
+	DB 	0FCH,0FCH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH
+	DB 	0FFH,0FFH,0FFH,01FH,0E3H,0F9H,0FCH,0FEH,07EH,0FAH,0E2H,006H,01EH,0FCH,0F9H,007H
+	DB 	003H,001H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	01FH,01EH,01EH,01FH,01FH,01FH,01FH,01FH,01FH,007H,007H,007H,007H,01FH,01FH,01FH
+	DB 	01FH,01FH,01FH,01FH,01FH,01FH,01FH,006H,004H,004H,004H,006H,004H,004H,006H,007H
+	DB 	004H,004H,004H,004H,007H,004H,004H,004H,006H,006H,004H,006H,006H,006H,006H,006H
+	DB 	007H,007H,007H,007H,003H,003H,003H,007H,007H,007H,007H,007H,007H,007H,007H,007H
+	DB 	007H,01FH,03FH,07EH,07FH,0FFH,0FFH,0FBH,0FBH,0E3H,0FBH,0F8H,07CH,03FH,01FH,003H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+
+; CARRO FRAME 4
+
+CARRO_FRAME4 DB 16, 4
+	DB 	000H,000H,000H,000H,0F8H,0FEH,0FEH,0FEH,0F8H,038H,000H,000H,018H,018H,038H,018H
+	DB 	018H,018H,038H,038H,038H,018H,018H,038H,038H,078H,078H,080H,000H,080H,0C0H,0C0H
+	DB 	080H,080H,080H,000H,000H,000H,000H,000H,000H,080H,0E0H,0E0H,0E0H,0E0H,0E0H,0E0H
+	DB 	0E0H,0E0H,0E0H,0E0H,0E0H,0E0H,0E0H,060H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	07EH,0FEH,0FEH,0FCH,0E3H,0E5H,0FFH,0FFH,0FFH,0FEH,0FCH,0FCH,0FCH,07EH,07EH,07EH
+	DB 	07CH,07CH,07CH,0FCH,0FCH,0FCH,0FCH,0F8H,0F8H,0E0H,0E0H,0E2H,0C6H,0DCH,09FH,0FFH
+	DB 	0FFH,0FFH,0FFH,0FFH,0FFH,0FEH,0FEH,0FEH,0FEH,0FFH,0FFH,0FFH,0FFH,0C3H,0C3H,0DBH
+	DB 	09FH,09FH,087H,003H,003H,0E1H,0E0H,0E0H,0F8H,0F8H,03CH,01EH,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,005H,007H,0FFH,007H,03FH,003H,081H,081H,003H,0BFH,001H,01FH,01EH
+	DB 	03EH,03EH,01EH,01EH,006H,002H,000H,004H,0FCH,0FCH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH
+	DB 	0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,01FH,0E3H,0F9H,0FCH,0FEH
+	DB 	07EH,0FAH,0E2H,006H,01EH,0FCH,0F9H,007H,003H,001H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	004H,004H,004H,006H,004H,004H,006H,007H,004H,004H,004H,004H,007H,004H,004H,004H
+	DB 	006H,006H,004H,006H,006H,006H,006H,006H,007H,007H,007H,007H,003H,003H,003H,007H
+	DB 	007H,007H,007H,007H,007H,007H,007H,007H,007H,01FH,03FH,07EH,07FH,0FFH,0FFH,0FBH
+	DB 	0FBH,0E3H,0FBH,0F8H,07CH,03FH,01FH,003H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+
+; CARRO FRAME 5
+CARRO_FRAME5 DB 16, 4
+	DB 	038H,018H,018H,038H,038H,078H,078H,080H,000H,080H,0C0H,0C0H,080H,080H,080H,000H
+	DB 	000H,000H,000H,000H,000H,080H,0E0H,0E0H,0E0H,0E0H,0E0H,0E0H,0E0H,0E0H,0E0H,0E0H
+	DB 	0E0H,0E0H,0E0H,060H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	0FCH,0FCH,0FCH,0F8H,0F8H,0E0H,0E0H,0E2H,0C6H,0DCH,09FH,0FFH,0FFH,0FFH,0FFH,0FFH
+	DB 	0FFH,0FEH,0FEH,0FEH,0FEH,0FFH,0FFH,0FFH,0FFH,0C3H,0C3H,0DBH,09FH,09FH,087H,003H
+	DB 	003H,0E1H,0E0H,0E0H,0F8H,0F8H,03CH,01EH,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	006H,002H,000H,004H,0FCH,0FCH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH
+	DB 	0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,01FH,0E3H,0F9H,0FCH,0FEH,07EH,0FAH,0E2H,006H
+	DB 	01EH,0FCH,0F9H,007H,003H,001H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	006H,006H,006H,006H,007H,007H,007H,007H,003H,003H,003H,007H,007H,007H,007H,007H
+	DB 	007H,007H,007H,007H,007H,01FH,03FH,07EH,07FH,0FFH,0FFH,0FBH,0FBH,0E3H,0FBH,0F8H
+	DB 	07CH,03FH,01FH,003H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+
+; CARRO FRAME 6
+CARRO_FRAME6 DB 16, 4
+	DB 	000H,000H,000H,000H,080H,0E0H,0E0H,0E0H,0E0H,0E0H,0E0H,0E0H,0E0H,0E0H,0E0H,0E0H
+	DB 	0E0H,0E0H,060H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	0FEH,0FEH,0FEH,0FEH,0FFH,0FFH,0FFH,0FFH,0C3H,0C3H,0DBH,09FH,09FH,087H,003H,003H
+	DB 	0E1H,0E0H,0E0H,0F8H,0F8H,03CH,01EH,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,01FH,0E3H,0F9H,0FCH,0FEH,07EH,0FAH,0E2H,006H,01EH
+	DB 	0FCH,0F9H,007H,003H,001H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	007H,007H,007H,007H,01FH,03FH,07EH,07FH,0FFH,0FFH,0FBH,0FBH,0E3H,0FBH,0F8H,07CH
+	DB 	03FH,01FH,003H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+
+; CARRO FRAME 7
+CARRO_FRAME7 DB 16,4
+	DB 	0E0H,0E0H,060H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	0E1H,0E0H,0E0H,0F8H,0F8H,03CH,01EH,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	0FCH,0F9H,007H,003H,001H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	03FH,01FH,003H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+	DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H   
 
 .STACK
 
 MINHA_PILHA DW 128 DUP(?)
 
-END
+          END

@@ -7,7 +7,7 @@ PROJECT =
 MCU = 8086
 COMPILER = "MASM32"
 TARGET = Debug
-SHELL = C:\Windows\system32\cmd.exe
+SHELL = C:\WINDOWS\system32\cmd.exe
 
 ## Tools general options
 ASMFLAGS=/c /Zd /Zi
@@ -16,9 +16,9 @@ LDFLAGS=/CODEVIEW
 ## Processing Tools
 ASM=ml.exe
 LD=link16.exe
-#  C:/Users/tbboeing/Desktop/principios-arquitetura-computadores-ii/TRABALHO_FINAL/GRAFICO_8086/8086/Debug/Debug.exe: TOOL=LD
-#     C:/Users/tbboeing/Desktop/principios-arquitetura-computadores-ii/TRABALHO_FINAL/GRAFICO_8086/8086/Debug/animacao.obj: TOOL=ASM
-#        C:/Users/tbboeing/Desktop/principios-arquitetura-computadores-ii/TRABALHO_FINAL/GRAFICO_8086/8086/animacao.asm
+#  D:/Assembly/principios-arquitetura-computadores-ii/TRABALHO_FINAL/GRAFICO_8086/8086/Debug/Debug.exe: TOOL=LD
+#     D:/Assembly/principios-arquitetura-computadores-ii/TRABALHO_FINAL/GRAFICO_8086/8086/Debug/animacao.obj: TOOL=ASM
+#        D:/Assembly/principios-arquitetura-computadores-ii/TRABALHO_FINAL/GRAFICO_8086/8086/animacao.asm
 
 # Build tree:
 all:	Debug

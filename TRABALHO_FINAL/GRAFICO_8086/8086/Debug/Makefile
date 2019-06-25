@@ -16,9 +16,9 @@ LDFLAGS=/CODEVIEW
 ## Processing Tools
 ASM=ml.exe
 LD=link16.exe
-#  D:/Assembly/principios-arquitetura-computadores-ii/TRABALHO_FINAL/GRAFICO_8086/8086/Debug/Debug.exe: TOOL=LD
-#     D:/Assembly/principios-arquitetura-computadores-ii/TRABALHO_FINAL/GRAFICO_8086/8086/Debug/animacao.obj: TOOL=ASM
-#        D:/Assembly/principios-arquitetura-computadores-ii/TRABALHO_FINAL/GRAFICO_8086/8086/animacao.asm
+#  C:/Users/tiago/Desktop/principios-arquitetura-computadores-ii/TRABALHO_FINAL/GRAFICO_8086/8086/Debug/Debug.exe: TOOL=LD
+#     C:/Users/tiago/Desktop/principios-arquitetura-computadores-ii/TRABALHO_FINAL/GRAFICO_8086/8086/Debug/animacao.obj: TOOL=ASM
+#        C:/Users/tiago/Desktop/principios-arquitetura-computadores-ii/TRABALHO_FINAL/GRAFICO_8086/8086/animacao.asm
 
 # Build tree:
 all:	Debug

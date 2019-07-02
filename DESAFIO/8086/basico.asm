@@ -364,8 +364,8 @@ PRINT_CAR:
 	MOV CX,5
 PRINTING_CAR:
 	MOV AL,FONTS[BX]
-        CALL GLCD_WRITE
-        INC BX
+	CALL GLCD_WRITE
+	INC BX
 	LOOP PRINTING_CAR
 	POP CX
 	POP BX
@@ -768,11 +768,11 @@ GAME:
         CALL BORDA_SUPERIOR
         CALL BORDA_INFERIOR
 
-                ; CONGELA TELA 5 SEGS
-                MOV   CX, 15
-                CALL  DELAY_SEG
-                
-                CALL  GLCD_CLR
+		; CONGELA TELA 5 SEGS
+		MOV   CX, 15
+		CALL  DELAY_SEG
+		
+		CALL  GLCD_CLR
 
 
         ;CALL  PERSONAGEM
@@ -780,23 +780,34 @@ GAME:
         ; OPERAÇÕES
         CALL TEXT_OPERACOES
 
-                ; 8 SEGUNDOS
-                MOV   CX, 8
-                CALL  DELAY_SEG
+		; 8 SEGUNDOS
+		MOV   CX, 8
+		CALL  DELAY_SEG
 
         ; NÍVEL 1
         CALL GLCD_CLR   ; LIMPA DISPLAY
         CALL TEXT_NIVEL1
 
-                ; 7 SEGUNDOS
-                MOV   CX, 7     ; CONGELA 7 SEGUNDOS
-                CALL  DELAY_SEG
+		; 7 SEGUNDOS
+		MOV   CX, 7     ; CONGELA 7 SEGUNDOS
+		CALL  DELAY_SEG
 
         ; MOSTRA PERGUNTA
         CALL  SINAIS
         CALL  BORDA_SUPERIOR
         CALL  ANIMACAO_CARRO
 
+		CALL  RECEBE_CARACTER
+		CALL  MANDA_CARACTER
+		CALL   IMPRIME_NUMERO_FINAL
+		MOV   CX, 7     ; CONGELA 7 SEGUNDOS
+		CALL  DELAY_SEG
+
+		;CMP AL,48
+		;JE ACERTOU
+		;CMP AL, 45
+		;JE ERROU
+		;CALL
 
         ; ------------------------
         ; LÓGICA DE GERAR NÚMERO RANDOM E EXIBIR NA TELA
@@ -809,12 +820,20 @@ GAME:
         ; NECESSÁRIO PARA MOSTRAR DE ACORDO COM A LÓGICA DO RANDOM
         CALL RESPOSTA_CORRETA
                 
-                ; 7 SEGUNDOS
-                MOV   CX, 7     ; CONGELA 7 SEGUNDOS
-                CALL  DELAY_SEG
+		; 7 SEGUNDOS
+		MOV   CX, 7     ; CONGELA 7 SEGUNDOS
+		CALL  DELAY_SEG
 
         JMP      $
         ; ROTINA DELAY DAS ANIMAÇÕES
+
+;POSICIONA CURSOR COLUNA 0, LINHA 0 
+IMPRIME_NUMERO_FINAL:	
+	MOV AH,4 ;COLUNA
+	MOV AL,3 ;LINHA
+    CALL GLCD_GOTO_XY_TEXT
+	MOV AL,"1"
+	CALL PRINT_CAR
 
 DELAY_SEG:
           MOV      DX, 65000D

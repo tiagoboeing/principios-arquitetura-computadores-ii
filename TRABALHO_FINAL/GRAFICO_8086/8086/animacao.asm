@@ -354,294 +354,299 @@ PRINTING_CAR:
           ; PRIMEIRO BYTE DO VETOR ? NUMERO DE LINHAS E COLUNAS OCUPADAS
           ; EXEMPLO, IMAGEM DE 24X24 PIXELS = 3 LINHAS X 3 COLUNAS
 PRINT_ICON:
-          PUSHF
-          PUSH     AX
-          PUSH     CX
-MOV CL,   DS       :[SI]
-          MOV      QNT_COLUNAS, CL                                                                   ; QNT COLUNAS IMPRESSAS
-          MOV      SALVA_QNT_COLUNAS, CL                                                             ; GUARDA QNT PARA NOVO LACO QNT COLUNAS IMPRESSAS
-          MOV      POS_COLUNAS, AH                                                                   ; COLUNA PASSADA COMO PARAMETRO
-MOV CL,   DS       :[SI+1]
-          MOV      LINHA, CL                                                                         ; LINHA
-          ADD      SI,2                                                                              ; APONTA PARA ICONE...
+        PUSHF
+        PUSH     AX
+        PUSH     CX
+        MOV CL,   DS       :[SI]
+        MOV      QNT_COLUNAS, CL                                                                   ; QNT COLUNAS IMPRESSAS
+        MOV      SALVA_QNT_COLUNAS, CL                                                             ; GUARDA QNT PARA NOVO LACO QNT COLUNAS IMPRESSAS
+        MOV      POS_COLUNAS, AH                                                                   ; COLUNA PASSADA COMO PARAMETRO
+        MOV CL,   DS       :[SI+1]
+        MOV      LINHA, CL                                                                         ; LINHA
+        ADD      SI,2                                                                              ; APONTA PARA ICONE...
 
 PRINT:
-          MOV      CX,8
-          CALL     GLCD_GOTO_XY_TEXT
+        MOV      CX,8
+        CALL     GLCD_GOTO_XY_TEXT
+
 PRINTING_ICON:
-          PUSH     AX
-MOV AL,   DS       :[SI]
-          CALL     GLCD_WRITE
-          POP      AX
-          INC      SI
-          LOOP     PRINTING_ICON
-          INC      AH
-          DEC      QNT_COLUNAS
-          JNE      PRINT
-          MOV      AH,SALVA_QNT_COLUNAS
-          MOV      QNT_COLUNAS,AH
-          MOV      AH,POS_COLUNAS
-          INC      AL
-          DEC      LINHA
-          JNE      PRINT
-          POP      CX
-          POP      AX
-          POPF
-          RET
+        PUSH     AX
+        MOV AL,   DS       :[SI]
+        CALL     GLCD_WRITE
+        POP      AX
+        INC      SI
+        LOOP     PRINTING_ICON
+        INC      AH
+        DEC      QNT_COLUNAS
+        JNE      PRINT
+        MOV      AH,SALVA_QNT_COLUNAS
+        MOV      QNT_COLUNAS,AH
+        MOV      AH,POS_COLUNAS
+        INC      AL
+        DEC      LINHA
+        JNE      PRINT
+        POP      CX
+        POP      AX
+        POPF
+        RET
 
-          ; ---------------------------------------------------------
-          ; ESTA ROTINA IMPRIME O GRAFICO APONTADO POR SI
+        ; ---------------------------------------------------------
+        ; ESTA ROTINA IMPRIME O GRAFICO APONTADO POR SI
+
 PLOT_BMP:
-          PUSHF
-          PUSH     AX
-          PUSH     SI
-          MOV      AL,0
-          MOV      AH,0
+        PUSHF
+        PUSH     AX
+        PUSH     SI
+        MOV      AL,0
+        MOV      AH,0
+
 PLOT:
-          CALL     GLCD_GOTO_XY
-          PUSH     AX
-          MOV      AL,[SI]
-          CALL     GLCD_WRITE
-          POP      AX
-          INC      SI
-          INC      AH
-          CMP      AH,127
-          JNE      PLOT
-          MOV      AH,0
-          INC      AL
-          CMP      AL,8
-          JNE      PLOT
-          POP      SI
-          POP      AX
-          POPF
-          RET
-          ; ---------------------------------------------------------
+        CALL     GLCD_GOTO_XY
+        PUSH     AX
+        MOV      AL,[SI]
+        CALL     GLCD_WRITE
+        POP      AX
+        INC      SI
+        INC      AH
+        CMP      AH,127
+        JNE      PLOT
+        MOV      AH,0
+        INC      AL
+        CMP      AL,8
+        JNE      PLOT
+        POP      SI
+        POP      AX
+        POPF
+        RET
+        ; ---------------------------------------------------------
 
-          ; ---------------------------------------------------------
-          ; ATIVA O GLCD
+        ; ---------------------------------------------------------
+        ; ATIVA O GLCD
+
 GLCD_ATIVA:
-          CALL     GLCD_CS1_HIGH
-          CALL     GLCD_CS2_HIGH
-          CALL     GLCD_RST_HIGH
-          CALL     GLCD_ON
-          RET
-          ; ---------------------------------------------------------
+        CALL     GLCD_CS1_HIGH
+        CALL     GLCD_CS2_HIGH
+        CALL     GLCD_RST_HIGH
+        CALL     GLCD_ON
+        RET
+        ; ---------------------------------------------------------
 
-          ; ---------------------------------------------------------
-          ; ESTAS ROTINAS APENAS GERAM PULSOS PARA O DISPLAY GRAFICO
+        ; ---------------------------------------------------------
+        ; ESTAS ROTINAS APENAS GERAM PULSOS PARA O DISPLAY GRAFICO
+
 GLCD_CS1_HIGH:
-          PUSHF
-          PUSH     AX
-          OR       GLCD_CONTROL, 32
-          MOV      AL,GLCD_CONTROL
-          CALL     MANDA_PORT_A
-          POP      AX
-          POPF
-          RET
+        PUSHF
+        PUSH     AX
+        OR       GLCD_CONTROL, 32
+        MOV      AL,GLCD_CONTROL
+        CALL     MANDA_PORT_A
+        POP      AX
+        POPF
+        RET
 
 GLCD_CS1_LOW:
-          PUSHF
-          PUSH     AX
-          MOV      AL, 32
-          NOT      AL
-          AND      GLCD_CONTROL, AL
-          MOV      AL,GLCD_CONTROL
-          CALL     MANDA_PORT_A
-          POP      AX
-          POPF
-          RET
+        PUSHF
+        PUSH     AX
+        MOV      AL, 32
+        NOT      AL
+        AND      GLCD_CONTROL, AL
+        MOV      AL,GLCD_CONTROL
+        CALL     MANDA_PORT_A
+        POP      AX
+        POPF
+        RET
 
 GLCD_CS2_HIGH:
-          PUSHF
-          PUSH     AX
-          OR       GLCD_CONTROL, 16
-          MOV      AL,GLCD_CONTROL
-          CALL     MANDA_PORT_A
-          POP      AX
-          POPF
-          RET
+        PUSHF
+        PUSH     AX
+        OR       GLCD_CONTROL, 16
+        MOV      AL,GLCD_CONTROL
+        CALL     MANDA_PORT_A
+        POP      AX
+        POPF
+        RET
 
 GLCD_CS2_LOW:
-          PUSHF
-          PUSH     AX
-          MOV      AL, 16
-          NOT      AL
-          AND      GLCD_CONTROL, AL
-          MOV      AL,GLCD_CONTROL
-          CALL     MANDA_PORT_A
-          POP      AX
-          POPF
-          RET
+        PUSHF
+        PUSH     AX
+        MOV      AL, 16
+        NOT      AL
+        AND      GLCD_CONTROL, AL
+        MOV      AL,GLCD_CONTROL
+        CALL     MANDA_PORT_A
+        POP      AX
+        POPF
+        RET
 
 GLCD_RST_HIGH:
-          PUSHF
-          PUSH     AX
-          OR       GLCD_CONTROL, 1
-          MOV      AL,GLCD_CONTROL
-          CALL     MANDA_PORT_A
-          POP      AX
-          POPF
-          RET
+        PUSHF
+        PUSH     AX
+        OR       GLCD_CONTROL, 1
+        MOV      AL,GLCD_CONTROL
+        CALL     MANDA_PORT_A
+        POP      AX
+        POPF
+        RET
 
 GLCD_RST_LOW:
-          PUSHF
-          PUSH     AX
-          MOV      AL, 1
-          NOT      AL
-          AND      GLCD_CONTROL, AL
-          MOV      AL,GLCD_CONTROL
-          CALL     MANDA_PORT_A
-          POP      AX
-          POPF
-          RET
+        PUSHF
+        PUSH     AX
+        MOV      AL, 1
+        NOT      AL
+        AND      GLCD_CONTROL, AL
+        MOV      AL,GLCD_CONTROL
+        CALL     MANDA_PORT_A
+        POP      AX
+        POPF
+        RET
 
 GLCD_EN_HIGH:
-          PUSHF
-          PUSH     AX
-          OR       GLCD_CONTROL, 2
-          MOV      AL,GLCD_CONTROL
-          CALL     MANDA_PORT_A
-          POP      AX
-          POPF
-          RET
+        PUSHF
+        PUSH     AX
+        OR       GLCD_CONTROL, 2
+        MOV      AL,GLCD_CONTROL
+        CALL     MANDA_PORT_A
+        POP      AX
+        POPF
+        RET
 
 GLCD_EN_LOW:
-          PUSHF
-          PUSH     AX
-          MOV      AL, 2
-          NOT      AL
-          AND      GLCD_CONTROL, AL
-          MOV      AL,GLCD_CONTROL
-          CALL     MANDA_PORT_A
-          POP      AX
-          POPF
-          RET
+        PUSHF
+        PUSH     AX
+        MOV      AL, 2
+        NOT      AL
+        AND      GLCD_CONTROL, AL
+        MOV      AL,GLCD_CONTROL
+        CALL     MANDA_PORT_A
+        POP      AX
+        POPF
+        RET
 
 GLCD_RW_HIGH:
-          PUSHF
-          PUSH     AX
-          OR       GLCD_CONTROL, 4
-          MOV      AL,GLCD_CONTROL
-          CALL     MANDA_PORT_A
-          POP      AX
-          POPF
-          RET
+        PUSHF
+        PUSH     AX
+        OR       GLCD_CONTROL, 4
+        MOV      AL,GLCD_CONTROL
+        CALL     MANDA_PORT_A
+        POP      AX
+        POPF
+        RET
 
 GLCD_RW_LOW:
-          PUSHF
-          PUSH     AX
-          MOV      AL, 4
-          NOT      AL
-          AND      GLCD_CONTROL, AL
-          MOV      AL,GLCD_CONTROL
-          CALL     MANDA_PORT_A
-          POP      AX
-          POPF
-          RET
+        PUSHF
+        PUSH     AX
+        MOV      AL, 4
+        NOT      AL
+        AND      GLCD_CONTROL, AL
+        MOV      AL,GLCD_CONTROL
+        CALL     MANDA_PORT_A
+        POP      AX
+        POPF
+        RET
 
 GLCD_RS_HIGH:
-          PUSHF
-          PUSH     AX
-          OR       GLCD_CONTROL, 8
-          MOV      AL,GLCD_CONTROL
-          CALL     MANDA_PORT_A
-          POP      AX
-          POPF
-          RET
+        PUSHF
+        PUSH     AX
+        OR       GLCD_CONTROL, 8
+        MOV      AL,GLCD_CONTROL
+        CALL     MANDA_PORT_A
+        POP      AX
+        POPF
+        RET
 
 GLCD_RS_LOW:
-          PUSHF
-          PUSH     AX
-          MOV      AL, 8
-          NOT      AL
-          AND      GLCD_CONTROL, AL
-          MOV      AL,GLCD_CONTROL
-          CALL     MANDA_PORT_A
-          POP      AX
-          POPF
-          RET
+        PUSHF
+        PUSH     AX
+        MOV      AL, 8
+        NOT      AL
+        AND      GLCD_CONTROL, AL
+        MOV      AL,GLCD_CONTROL
+        CALL     MANDA_PORT_A
+        POP      AX
+        POPF
+        RET
 
 ENABLE_PULSE:
-          CALL     GLCD_EN_HIGH
-          CALL     GLCD_EN_LOW
-          RET
+        CALL     GLCD_EN_HIGH
+        CALL     GLCD_EN_LOW
+        RET
 
-          ; ---------------------------------------------------------
-          ; ROTINAS PARA 8255
+        ; ---------------------------------------------------------
+        ; ROTINAS PARA 8255
 INICIALIZA_8255_PORTB_OUTPUT:
-          PUSHF
-          PUSH     AX
-          PUSH     DX
-          MOV      DX, ADR_PPI_CONTROL
-          MOV      AL,0
-          OR       AL,PPI_PORTA_OUT
-          OR       AL,PPI_PORTB_OUT
-          OR       AL,PPI_PORTCL_INP
-          OR       AL,PPI_PORTCH_INP
-          OR       AL,PPI_MODE_BCL_0
-          OR       AL,PPI_MODE_ACH_0
-          OR       AL,PPI_ACTIVE
-          OUT      DX,AL
-          POP      DX
-          POP      AX
-          POPF
-          RET
+        PUSHF
+        PUSH     AX
+        PUSH     DX
+        MOV      DX, ADR_PPI_CONTROL
+        MOV      AL,0
+        OR       AL,PPI_PORTA_OUT
+        OR       AL,PPI_PORTB_OUT
+        OR       AL,PPI_PORTCL_INP
+        OR       AL,PPI_PORTCH_INP
+        OR       AL,PPI_MODE_BCL_0
+        OR       AL,PPI_MODE_ACH_0
+        OR       AL,PPI_ACTIVE
+        OUT      DX,AL
+        POP      DX
+        POP      AX
+        POPF
+        RET
 
 INICIALIZA_8255_PORT_INPUT:
-          PUSHF
-          PUSH     AX
-          PUSH     DX
-          MOV      DX, ADR_PPI_CONTROL
-          MOV      AL,0
-          OR       AL,PPI_PORTA_OUT
-          OR       AL,PPI_PORTB_INP
-          OR       AL,PPI_PORTCL_INP
-          OR       AL,PPI_PORTCH_INP
-          OR       AL,PPI_MODE_BCL_0
-          OR       AL,PPI_MODE_ACH_0
-          OR       AL,PPI_ACTIVE
-          OUT      DX,AL
-          POP      DX
-          POP      AX
-          POPF
-          RET
+        PUSHF
+        PUSH     AX
+        PUSH     DX
+        MOV      DX, ADR_PPI_CONTROL
+        MOV      AL,0
+        OR       AL,PPI_PORTA_OUT
+        OR       AL,PPI_PORTB_INP
+        OR       AL,PPI_PORTCL_INP
+        OR       AL,PPI_PORTCH_INP
+        OR       AL,PPI_MODE_BCL_0
+        OR       AL,PPI_MODE_ACH_0
+        OR       AL,PPI_ACTIVE
+        OUT      DX,AL
+        POP      DX
+        POP      AX
+        POPF
+        RET
 
 MANDA_PORT_A:
-          PUSHF
-          PUSH     DX
-          MOV      DX,ADR_PPI_PORTA
-          OUT      DX,AL
-          POP      DX
-          POPF
-          RET
+        PUSHF
+        PUSH     DX
+        MOV      DX,ADR_PPI_PORTA
+        OUT      DX,AL
+        POP      DX
+        POPF
+        RET
 
 MANDA_PORT_B:
-          PUSHF
-          PUSH     DX
-          MOV      DX,ADR_PPI_PORTB
-          OUT      DX,AL
-          POP      DX
-          POPF
-          RET
+        PUSHF
+        PUSH     DX
+        MOV      DX,ADR_PPI_PORTB
+        OUT      DX,AL
+        POP      DX
+        POPF
+        RET
 
 LE_PORT_B:
-          PUSHF
-          PUSH     DX
-          MOV      DX,ADR_PPI_PORTB
-          IN       AL,DX
-          POP      DX
-          POPF
-          RET
+        PUSHF
+        PUSH     DX
+        MOV      DX,ADR_PPI_PORTB
+        IN       AL,DX
+        POP      DX
+        POPF
+        RET
 
 LE_PORT_C:
-          PUSHF
-          PUSH     DX
-          MOV      DX,ADR_PPI_PORTC
-          IN       AL,DX
-          POP      DX
-          POPF
-          RET
-          ; ---------------------------------------------------------
+        PUSHF
+        PUSH     DX
+        MOV      DX,ADR_PPI_PORTC
+        IN       AL,DX
+        POP      DX
+        POPF
+        RET
+        ; ---------------------------------------------------------
 
 .startup
 
@@ -669,11 +674,8 @@ GAME:
                 CALL  DELAY_SEG
                 
                 CALL  GLCD_CLR
-
-
-        ;CALL  PERSONAGEM
         
-        ; OPERA??ES
+        ; OPERACOES
         CALL TEXT_OPERACOES
 
                 ; 8 SEGUNDOS
@@ -693,24 +695,71 @@ GAME:
         CALL  BORDA_SUPERIOR
         CALL  ANIMACAO_CARRO
 
+                ; MOSTRA QUADRADO DE FUNDO
+                ; LOCAL ONDE VAI O SINAL + OU -
+                CALL FUNDO_OPERACAO
+                CALL SINAL_IGUAL
 
-        ; ------------------------
-        ; L?GICA DE GERAR N?MERO RANDOM E EXIBIR NA TELA
+                ; PLOTAR NUM1 RANDOM GERADO
+                EXIBE_NUM1:
+                        MOV AH,4        ;COLUNA
+                        MOV AL,6        ;LINHA
+                        CALL GLCD_GOTO_XY_TEXT
+                        MOV AL,"9"
+                        CALL PRINT_CAR
 
-
-        ; ------------------------
-
-
-        ; RESPOSTA
-        ; NECESS?RIO PARA MOSTRAR DE ACORDO COM A L?GICA DO RANDOM
-        CALL RESPOSTA_CORRETA
+                ; PLOTAR NUM2 RANDOM GERADO
+                EXIBE_NUM2:
+                        MOV AH,8        ;COLUNA
+                        MOV AL,6        ;LINHA
+                        CALL GLCD_GOTO_XY_TEXT
+                        MOV AL,"4"
+                        CALL PRINT_CAR
                 
-                ; 7 SEGUNDOS
-                MOV   CX, 7     ; CONGELA 7 SEGUNDOS
-                CALL  DELAY_SEG
+                ; PLOTAR RESULTADO
+                EXIBE_RESULTADO:
+                        MOV AH,12        ;COLUNA
+                        MOV AL,6        ;LINHA
+                        CALL GLCD_GOTO_XY_TEXT
+                        MOV AL,"5"
+                        CALL PRINT_CAR
+
+                        
+        ; ------------------------
+        ; LOGICA DE GERAR NUMERO RANDOM E EXIBIR NA TELA
+        CALL LOGICA_GAME
+
+                ; PEGAR OPERAÇÃO RANDOM GERADA E COMPARAR
+                ; COM A INFORMADA PELO USUÁRIO
+
+
+                ; TRATA OPERAÇÃO ESCOLHIDA PELO USUÁRIO
+                ; SE OPERAÇÃO + FOR SELECIONADA
+                ; CALL MAIS_SELECIONADO
+
+                ; SE OPERAÇÃO - FOR SELECIONADA
+                ; CALL MENOS_SELECIONADO
+
+
+                ; SE RESPOSTA ESTIVER CORRETA
+                ; CALL RESPOSTA_CORRETA
+                        
+                        ; 5 SEGUNDOS NO DISPLAY
+                        ; MOV   CX, 5
+                        ; CALL  DELAY_SEG
+
+                ; SE RESPOSTA ESTIVER ERRADA
+                ; CALL PERSONAGEM
+                
+                        ; 5 SEGUNDOS NO DISPLAY
+                        ; MOV   CX, 5
+                        ; CALL  DELAY_SEG
+
+        ; ------------------------
+
 
         JMP      $
-        ; ROTINA DELAY DAS ANIMA??ES
+        ; ROTINA DELAY DAS ANIMACOES
 
 DELAY_SEG:
           MOV      DX, 65000D
@@ -726,7 +775,46 @@ DECDX:
 
           ; --------------------------------
 
+LOGICA_GAME:
+        ; GERA NÚMEROS RANDOM E OPERAÇÃO
+        ; REALIZA SOMA OU SUBTRAÇÃO E GUARDA RESULTADO
+        RET
 
+FUNDO_OPERACAO:
+        MOV      AH,5                                                                              ; COLUNA
+        MOV      AL,5                                                                              ; LINHA
+        CALL     GLCD_GOTO_XY_TEXT
+        MOV      BH,0
+        LEA      SI, QUADRADO_SINAL
+        CALL     PRINT_ICON
+        RET
+
+SINAL_IGUAL:
+        MOV      AH,9                                                                              ; COLUNA
+        MOV      AL,5                                                                              ; LINHA
+        CALL     GLCD_GOTO_XY_TEXT
+        MOV      BH,0
+        LEA      SI, SINAL_IGUALDADE
+        CALL     PRINT_ICON
+        RET
+
+MAIS_SELECIONADO:
+        MOV      AH,5                                                                              ; COLUNA
+        MOV      AL,5                                                                              ; LINHA
+        CALL     GLCD_GOTO_XY_TEXT
+        MOV      BH,0
+        LEA      SI, SINAL_MAIS
+        CALL     PRINT_ICON
+        RET
+
+MENOS_SELECIONADO:
+        MOV      AH,5                                                                              ; COLUNA
+        MOV      AL,5                                                                              ; LINHA
+        CALL     GLCD_GOTO_XY_TEXT
+        MOV      BH,0
+        LEA      SI, SINAL_MENOS
+        CALL     PRINT_ICON
+        RET
 
 RESPOSTA_CORRETA: 
         ; FRAME 0
@@ -837,43 +925,44 @@ BORDA_INFERIOR:
         LEA      SI, OSSO
         CALL     PRINT_ICON
         RET  
+
 PERSONAGEM:
-          LEA      SI, VERT
-          MOV      AH,0                                                                              ; COLUNA
-          MOV      AL,0                                                                              ; LINHA
-          CALL     PRINT_ICON
-          RET
+        LEA      SI, VERT
+        MOV      AH,0                                                                              ; COLUNA
+        MOV      AL,0                                                                              ; LINHA
+        CALL     PRINT_ICON
+        RET
 
 DESENHA_MAIS:
-          MOV      AH,5                                                                              ; COLUNA
-          MOV      AL,2                                                                              ; LINHA
-          CALL     GLCD_GOTO_XY_TEXT
-          MOV      BH,0
-          LEA      SI, SINAL_MAIS
-          CALL     PRINT_ICON
-          RET
+        MOV      AH,5                                                                              ; COLUNA
+        MOV      AL,2                                                                              ; LINHA
+        CALL     GLCD_GOTO_XY_TEXT
+        MOV      BH,0
+        LEA      SI, SINAL_MAIS
+        CALL     PRINT_ICON
+        RET
 
 DESENHA_MENOS:
-          MOV      AH,9                                                                              ; COLUNA
-          MOV      AL,2                                                                              ; LINHA
-          CALL     GLCD_GOTO_XY_TEXT
-          MOV      BH,0
-          LEA      SI, SINAL_MENOS
-          CALL     PRINT_ICON
-          RET
+        MOV      AH,9                                                                              ; COLUNA
+        MOV      AL,2                                                                              ; LINHA
+        CALL     GLCD_GOTO_XY_TEXT
+        MOV      BH,0
+        LEA      SI, SINAL_MENOS
+        CALL     PRINT_ICON
+        RET
 
 DESENHA_MAIS_PREENCHIDO:
-          MOV      AH,5                                                                              ; COLUNA
-          MOV      AL,2                                                                              ; LINHA
-          CALL     GLCD_GOTO_XY_TEXT
-          MOV      BH,0
-          LEA      SI, SINAL_MAIS_PREENCHIDO
-          CALL     PRINT_ICON
-          RET
+        MOV      AH,5                                                                              ; COLUNA
+        MOV      AL,2                                                                              ; LINHA
+        CALL     GLCD_GOTO_XY_TEXT
+        MOV      BH,0
+        LEA      SI, SINAL_MAIS_PREENCHIDO
+        CALL     PRINT_ICON
+        RET
 
 DESENHA_MENOS_PREENCHIDO:
-MOV      AH,9                                                                              ; COLUNA
-MOV      AL,2                                                                              ; LINHA
+        MOV      AH,9                                                                              ; COLUNA
+        MOV      AL,2                                                                              ; LINHA
         CALL     GLCD_GOTO_XY_TEXT
         MOV      BH,0
         LEA      SI, SINAL_MENOS_PREENCHIDO
@@ -881,8 +970,8 @@ MOV      AL,2                                                                   
         RET
 
 ANIMACAO_CARRO:
-MOV     AH,0                                                                            ; COLUNA
-MOV     AL,4                                                                            ; LINHA
+        MOV     AH,0                                                                            ; COLUNA
+        MOV     AL,4                                                                            ; LINHA
         CALL    GLCD_GOTO_XY_TEXT
         MOV     BH,0
 
@@ -921,13 +1010,13 @@ MOV     AL,4                                                                    
         RET
 
 TELA_INICIAL:
-          MOV      AH,5                                                                              ; COLUNA
-          MOV      AL,2                                                                              ; LINHA
-          CALL     GLCD_GOTO_XY_TEXT
-          MOV      BH,0
-          LEA      SI, MAIS_E_MENOS
-          CALL     PRINT_ICON
-          RET
+        MOV      AH,5                                                                              ; COLUNA
+        MOV      AL,2                                                                              ; LINHA
+        CALL     GLCD_GOTO_XY_TEXT
+        MOV      BH,0
+        LEA      SI, MAIS_E_MENOS
+        CALL     PRINT_ICON
+        RET
 
 CARRO_F1:
         CMP     CX,0
@@ -2275,6 +2364,22 @@ MAOFRAME2 DB 16, 8
         DB 	000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,0FFH,000H,000H,0FEH
         DB 	080H,000H,000H,000H,000H,000H,000H,002H,004H,01CH,01CH,01CH,002H,002H,000H,080H
         DB 	0FDH,0E0H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H,000H
+
+SINAL_MAIS_ONLY DB 2, 2
+        DB 	000H,000H,080H,080H,080H,080H,080H,0FCH,0FCH,080H,080H,080H,080H,080H,000H,000H
+        DB 	000H,000H,001H,001H,001H,001H,001H,03FH,03FH,001H,001H,001H,001H,001H,000H,000H
+
+SINAL_MENOS_ONLY DB 2, 2
+        DB 	000H,000H,080H,080H,080H,080H,080H,080H,080H,080H,080H,080H,080H,080H,000H,000H
+        DB 	000H,000H,001H,001H,001H,001H,001H,001H,001H,001H,001H,001H,001H,001H,000H,000H
+
+SINAL_IGUALDADE DB 2, 2
+        DB 	000H,000H,060H,060H,060H,060H,060H,060H,060H,060H,060H,060H,060H,060H,000H,000H
+        DB 	000H,000H,006H,006H,006H,006H,006H,006H,006H,006H,006H,006H,006H,006H,000H,000H
+
+QUADRADO_SINAL DB 2, 2
+        DB 	0FFH,001H,001H,001H,001H,001H,001H,001H,001H,001H,001H,001H,001H,001H,001H,0FFH
+        DB 	0FFH,080H,080H,080H,080H,080H,080H,080H,080H,080H,080H,080H,080H,080H,080H,0FFH
 
 .STACK
 
